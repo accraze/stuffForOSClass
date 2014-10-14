@@ -72,6 +72,7 @@ void load(implementation *parallelFuncs) {
 	parallelFuncs[0].header.push_back("  ");
 	parallelFuncs[0].header.push_back("  pthread_exit(NULL);");
 	parallelFuncs[0].header.push_back("}");
+	parallelFuncs[0].header.push_back("");
 
 	DEBUG_PRINT("ALL LOADED@!!@");
 	//DEBUG_ARRAY(parallelFuncs);
@@ -93,7 +94,6 @@ void parseHeader(ifstream& file, vector<string>& header) {
 
 		header.push_back(line);
 	}
-	header.push_back("");
 }
 
 void skipInputLines(ifstream& file) {
