@@ -2,7 +2,6 @@
 #include	<stdlib.h>
 #include 	<pthread.h>
 
-
 #define NUM_THREADS 16
  
 typedef struct _thread_data_t {
@@ -12,15 +11,14 @@ typedef struct _thread_data_t {
 void *do_work(void *arg) {
   thread_data_t *data = (thread_data_t *)arg;
   
-  printf( "The parallel region is executed by thread %d\
-", data.tid );
+  printf( "The parallel region is executed by thread %d\n", data->tid );
   
-  if( data.tid == 2 )
-		printf( "   Thread %d does things differently\
-", data.tid );
+  if( data->tid == 2 )
+		printf( "   Thread %d does things differently\n", data->tid );
   
   pthread_exit(NULL);
 }
+
 int main()
 {
 
@@ -30,8 +28,7 @@ int main()
   
   for (i = 0; i < NUM_THREADS; ++i) {
     if ((rc = pthread_create(&thr[i], NULL, do_work, &thr_data[i]))) {
-      fprintf(stderr, "error: pthread_create, rc: %d\
-", rc);
+      fprintf(stderr, "error: pthread_create, rc: %d\n", rc);
       return EXIT_FAILURE;
     }
   }

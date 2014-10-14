@@ -1,5 +1,3 @@
-g++ main.cpp
-g++ loader.cpp
-
-rm main
-rm loader
+All:
+	g++ main.cpp -o a.out
+	./a.out
