@@ -5,6 +5,8 @@
 
 #define NUM_PFUNC 6
 
+#define DEBUG false
+
 using namespace std;
 
 typedef struct implementation {
@@ -16,6 +18,14 @@ typedef struct implementation {
 string checkForDirective(string line);
 void parseHeader(ifstream& file, vector<string>& header);
 void load(std::string (&parallelFuncs)[NUM_PFUNC]);
+
+void DEBUG_PRINT (string line) {
+	if(DEBUG == true){
+		cout << "+++++++++++++++++++++++++++++++++++++++++++++++" << endl;
+		cout << line << endl;		
+	}
+
+}
 
 
 string checkForDirective (string line) {
@@ -32,11 +42,11 @@ void load(implementation *parallelFuncs) {
 	parallelFuncs[0].collection.push_back("  thread_data_t thr_data[NUM_THREADS];");
 	parallelFuncs[0].collection.push_back("  ");
 	parallelFuncs[0].collection.push_back("  for (i = 0; i < NUM_THREADS; ++i) {");
-    parallelFuncs[0].collection.push_back("    if ((rc = pthread_create(&thr[i], NULL, do_work, &thr_data[i]))) {");
-    parallelFuncs[0].collection.push_back("      fprintf(stderr, \"error: pthread_create, rc: %d\n\", rc);");
-    parallelFuncs[0].collection.push_back("      return EXIT_FAILURE;");
-    parallelFuncs[0].collection.push_back("    }");
-    parallelFuncs[0].collection.push_back("  }");
+	parallelFuncs[0].collection.push_back("    if ((rc = pthread_create(&thr[i], NULL, do_work, &thr_data[i]))) {");
+	parallelFuncs[0].collection.push_back("      fprintf(stderr, \"error: pthread_create, rc: %d\n\", rc);");
+	parallelFuncs[0].collection.push_back("      return EXIT_FAILURE;");
+	parallelFuncs[0].collection.push_back("    }");
+	parallelFuncs[0].collection.push_back("  }");
 	parallelFuncs[0].collection.push_back("  for (i = 0; i < NUM_THREADS; ++i) {");
 	parallelFuncs[0].collection.push_back("    pthread_join(thr[i], NULL);");
 	parallelFuncs[0].collection.push_back("  }");
@@ -58,14 +68,14 @@ void load(implementation *parallelFuncs) {
 	parallelFuncs[0].header.push_back("  pthread_exit(NULL);");
 	parallelFuncs[0].header.push_back("}");
 
-	cout << "ALL LOADED@!!@" << endl;
+	DEBUG_PRINT("ALL LOADED@!!@");
 }
 
 void parseHeader(ifstream& file, vector<string>& header) {
 	string line;
 
 	std::getline (file,line);
-	cout<< line << endl;
+
 	header.push_back(line);
 
 	while(line.find("#include") != string::npos) {
@@ -74,7 +84,7 @@ void parseHeader(ifstream& file, vector<string>& header) {
 		if(line == "#include	<omp.h>") {
 			line = "#include 	<pthread.h>";
 		}
-		cout<< line << endl;
+
 		header.push_back(line);
 	}
 }
@@ -92,9 +102,17 @@ void skipInputLines(ifstream& file) {
 	}
 }
 
+void _addPThreadCoteToNewCode(vector<string>& list,vector<string>& header, implementation *dict) {
+}
 
+void loadVector(vector<string>& source, vector<string>& target) {
+ 	DEBUG_PRINT("VECTOR LOAD");
+ 	
+ 	for( std::vector<string>::const_iterator i = source.begin(); i != source.end(); ++i)
+ 		target.push_back(*i);
+}
 
- void parseResult(string resultName,vector<string>& header,
+void parseResult(string resultName,vector<string>& header,
 					 vector<string>& list,implementation *dict) {
  	
  	for(int i = 0; i < NUM_PFUNC; i++){
@@ -106,12 +124,13 @@ void skipInputLines(ifstream& file) {
  	}
  }
 
- void printVector(vector<string> dict) {
- 	cout << "+++++++++++++++++++++++++++++++++++++++++++++++" << endl;
- 	cout << "VECTOR DEBUG" << endl;
+void DEBUG_VECTOR(vector<string> dict) {
+ 	if(DEBUG){
+		 	DEBUG_PRINT("VECTOR DEBUG");	
 
- 	for( std::vector<string>::const_iterator i = dict.begin(); i != dict.end(); ++i)
-    	std::cout << *i << ' ' << endl;
+		 	for( std::vector<string>::const_iterator i = dict.begin(); i != dict.end(); ++i)
+		    	std::cout << *i << ' ' << endl;
+	 	}
  }
 
 int main (int argc, char *argv[]) {
@@ -149,7 +168,7 @@ int main (int argc, char *argv[]) {
 		}	
 	}
 
-	printVector(list);
+	DEBUG_VECTOR(list);
 	
 	in_stream.close();
 	
