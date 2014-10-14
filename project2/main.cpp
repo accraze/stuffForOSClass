@@ -47,6 +47,7 @@ void load(implementation *parallelFuncs) {
 	parallelFuncs[0].collection.push_back("  thread_data_t thr_data[NUM_THREADS];");
 	parallelFuncs[0].collection.push_back("  ");
 	parallelFuncs[0].collection.push_back("  for (i = 0; i < NUM_THREADS; ++i) {");
+	parallelFuncs[0].collection.push_back("    thr_data[i].tid = i;");	
 	parallelFuncs[0].collection.push_back("    if ((rc = pthread_create(&thr[i], NULL, do_work, &thr_data[i]))) {");
 	parallelFuncs[0].collection.push_back("      fprintf(stderr, \"error: pthread_create, rc: %d\\n\", rc);");
 	parallelFuncs[0].collection.push_back("      return EXIT_FAILURE;");

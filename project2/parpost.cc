@@ -27,6 +27,7 @@ int main()
   thread_data_t thr_data[NUM_THREADS];
   
   for (i = 0; i < NUM_THREADS; ++i) {
+    thr_data[i].tid = i;
     if ((rc = pthread_create(&thr[i], NULL, do_work, &thr_data[i]))) {
       fprintf(stderr, "error: pthread_create, rc: %d\n", rc);
       return EXIT_FAILURE;
