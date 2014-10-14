@@ -29,6 +29,8 @@ void skipInputLines(ifstream& file);
 void parseHeader(ifstream& file, vector<string>& header);
 void load(implementation *parallelFuncs);
 string checkForDirective (string line);
+string getNumThreads(string directive);
+void addNumThreads(string inputLine, implementation *dict);
 
 
  //**************************//
@@ -60,11 +62,44 @@ void DEBUG_ARRAY(implementation *dict){
 	}
 }
 
-string checkForDirective (string line) {
-	if(line == "#pragma omp parallel num_threads(16)") {
+string checkForDirective (string line, implementation *dict) {
+	int check = line.find("#pragma omp parallel ");
+	if(check != std::string::npos) {
+		addNumThreads(line, dict);
+
 		return "par";
 	}
 	return "null";
+}
+
+void addNumThreads(string inputLine, implementation *dict) {
+	string num = getNumThreads(inputLine);
+
+	string line = "#define NUM_THREADS ";
+	line += num;
+
+	dict[0].header.insert(dict[0].header.begin(),line);
+}
+
+string getNumThreads(string directive) {
+	/*
+		Parses the openMP directive and returns the 
+		number of threads.
+	*/
+	string numThreads;
+	int start = directive.find("(");
+	int end = directive.find(")");
+	
+	numThreads = directive.substr(start+1, end);
+
+	end = numThreads.find(")");
+	if(end != std::string::npos){
+		numThreads = numThreads.substr(0, end);
+	}
+
+	DEBUG_PRINT(numThreads);
+
+	return numThreads;
 }
 
 void load(implementation *parallelFuncs) {
@@ -84,7 +119,7 @@ void load(implementation *parallelFuncs) {
 	parallelFuncs[0].collection.push_back("    pthread_join(thr[i], NULL);");
 	parallelFuncs[0].collection.push_back("  }");
 	parallelFuncs[0].collection.push_back(" ");
-	parallelFuncs[0].header.push_back("#define NUM_THREADS 16");
+	//parallelFuncs[0].header.push_back("#define NUM_THREADS ");
 	parallelFuncs[0].header.push_back(" ");
 	parallelFuncs[0].header.push_back("typedef struct _thread_data_t {");
 	parallelFuncs[0].header.push_back("  int tid;");
@@ -167,17 +202,19 @@ void parseResult(string resultName,vector<string>& header, vector<string>& list,
  	}
  }
 
-void saveProcessedProgram(vector<string>& header, vector<string>& list, string programName) {
-	string fileName = "./" + programName + "post.cc";
+void saveProcessedProgram(vector<string>& header, vector<string>& functionsList, string programName) {
+	/* Takes the processed header and functionList and writes to file */
 
+	string fileName = "./" + programName + "post.cc";
 
 	ofstream output_file(fileName.c_str());
     
     ostream_iterator<std::string> output_iterator(output_file, "\n");
     
+    //write the program header to file
     copy(header.begin(), header.end(), output_iterator);
-
-    copy(list.begin(), list.end(), output_iterator);
+    //write the program functions to file
+    copy(functionsList.begin(), functionsList.end(), output_iterator);
 }
 
 string getProgramName(string fileName) {
@@ -229,7 +266,7 @@ int main (int argc, char *argv[]) {
 		std::getline (in_stream,line);
 
 		//check line for directives
-		result = checkForDirective(line);
+		result = checkForDirective(line, parallelFuncs);
 		
 		if(result != "null"){
 			parseResult(result, header, list, parallelFuncs);
