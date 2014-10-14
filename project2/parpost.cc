@@ -1,5 +1,3 @@
-//g++ -Wall parpost.cc -o a1.out -pthread -lpthread
-
 #include	<stdio.h>
 #include	<stdlib.h>
 #include 	<pthread.h>

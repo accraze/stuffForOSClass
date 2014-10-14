@@ -23,13 +23,12 @@ void DEBUG_PRINT (string line);
 void DEBUG_VECTOR(vector<string>& dict);
 void DEBUG_ARRAY(implementation *dict);
 void _addPThreadCodeToNewCode(string name, vector<string>& list,vector<string>& header, implementation *dict);
-string checkForDirective (string line);
 void loadVector(vector<string>& source, vector<string>& target);
-void saveProcessedProgram(vector<string>& header, vector<string>& list);
+void saveProcessedProgram(vector<string>& header, vector<string>& list, string programName);
 void skipInputLines(ifstream& file);
 void parseHeader(ifstream& file, vector<string>& header);
 void load(implementation *parallelFuncs);
-
+string checkForDirective (string line);
 
 
  //**************************//
@@ -44,10 +43,10 @@ void DEBUG_PRINT (string line) {
 
 void DEBUG_VECTOR(vector<string>& dict) {
  	if(DEBUG){
-		 	DEBUG_PRINT("VECTOR DEBUG");	
+		 DEBUG_PRINT("VECTOR DEBUG");	
 
-		 	for( std::vector<string>::const_iterator i = dict.begin(); i != dict.end(); ++i)
-		    	std::cout << *i << ' ' << endl;
+		 for( std::vector<string>::const_iterator i = dict.begin(); i != dict.end(); ++i)
+		 	std::cout << *i << ' ' << endl;
 	 	}
 }
 
@@ -168,8 +167,11 @@ void parseResult(string resultName,vector<string>& header, vector<string>& list,
  	}
  }
 
-void saveProcessedProgram(vector<string>& header, vector<string>& list) {
-	ofstream output_file("./parpost.cc");
+void saveProcessedProgram(vector<string>& header, vector<string>& list, string programName) {
+	string fileName = "./" + programName + "post.cc";
+
+
+	ofstream output_file(fileName.c_str());
     
     ostream_iterator<std::string> output_iterator(output_file, "\n");
     
@@ -178,12 +180,36 @@ void saveProcessedProgram(vector<string>& header, vector<string>& list) {
     copy(list.begin(), list.end(), output_iterator);
 }
 
+string getProgramName(string fileName) {
+	/*
+		Parses the program name from the path or filename
+		given when executing the preprocessor. Find the '.'
+		character in fileName extension, then parse all '/ 'directory
+		characters.
+	*/
+	string programName;
+	int start=0;
+	int end;
+	end = fileName.find(".");
+	
+	programName = fileName.substr(start, end);
+
+	int loc = programName.find("/");
+	while(loc != std::string::npos){
+		programName = programName.substr(loc + 1, end);
+		loc = programName.find("/");
+	}
+
+	DEBUG_PRINT(programName);
+
+	return programName;
+}
+
 int main (int argc, char *argv[]) {
-	//read in program from command line arguments
 	implementation parallelFuncs[NUM_PFUNC];
 	vector<string> header;
 	vector<string> list;
-	//string programName;
+	string programName;
 
 	load(parallelFuncs);
 
@@ -193,7 +219,7 @@ int main (int argc, char *argv[]) {
 	string result;
 	
 	//in_stream.open(argv[1]);
-	//getProgramName
+	programName = getProgramName("INPUT/par.cc");
 	in_stream.open("INPUT/par.cc");
 	
 	parseHeader(in_stream, header);
@@ -206,18 +232,18 @@ int main (int argc, char *argv[]) {
 		result = checkForDirective(line);
 		
 		if(result != "null"){
-			//cout << result << endl;
 			parseResult(result, header, list, parallelFuncs);
+			
 			skipInputLines(in_stream);
 		} else {
 			list.push_back(line);
 		}	
 	}
 
-	DEBUG_VECTOR(header);
-	DEBUG_VECTOR(list);
+	//DEBUG_VECTOR(header);
+	//DEBUG_VECTOR(list);
 
-	saveProcessedProgram(header, list);
+	saveProcessedProgram(header, list, programName);
 	
 	in_stream.close();
 	
