@@ -5,7 +5,6 @@
 #include <stdio.h>
 
 #define NUM_PFUNC 6
-
 #define DEBUG true
 
 using namespace std;
@@ -16,20 +15,49 @@ typedef struct implementation {
   std::vector<std::string> header;
 } implementation;
 
-void _addPThreadCodeToNewCode(string name, vector<string>& list,vector<string>& header, implementation *dict);
+//************************ //
+//      Declarations      //
+//***********************//
+
+void DEBUG_PRINT (string line);
 void DEBUG_VECTOR(vector<string>& dict);
+void DEBUG_ARRAY(implementation *dict);
+void _addPThreadCodeToNewCode(string name, vector<string>& list,vector<string>& header, implementation *dict);
+string checkForDirective (string line);
 void loadVector(vector<string>& source, vector<string>& target);
 void saveProcessedProgram(vector<string>& header, vector<string>& list);
 void skipInputLines(ifstream& file);
 void parseHeader(ifstream& file, vector<string>& header);
 void load(implementation *parallelFuncs);
-void DEBUG_PRINT (string line);
-string checkForDirective (string line);
 
+
+
+ //**************************//
+ //      DEBUG UTILITIES    //
+//*************************//
 void DEBUG_PRINT (string line) {
 	if(DEBUG == true){
 		cout << "+++++++++++++++++++++++++++++++++++++++++++++++" << endl;
 		cout << line << endl;		
+	}
+}
+
+void DEBUG_VECTOR(vector<string>& dict) {
+ 	if(DEBUG){
+		 	DEBUG_PRINT("VECTOR DEBUG");	
+
+		 	for( std::vector<string>::const_iterator i = dict.begin(); i != dict.end(); ++i)
+		    	std::cout << *i << ' ' << endl;
+	 	}
+}
+
+void DEBUG_ARRAY(implementation *dict){
+	for(int i = 0; i < NUM_PFUNC; i++) {
+		DEBUG_PRINT("HEADER");
+		DEBUG_VECTOR(dict[i].header);
+		DEBUG_PRINT("LIST");
+		DEBUG_VECTOR(dict[i].collection);
+
 	}
 }
 
@@ -140,25 +168,6 @@ void parseResult(string resultName,vector<string>& header, vector<string>& list,
  	}
  }
 
-void DEBUG_VECTOR(vector<string>& dict) {
- 	if(DEBUG){
-		 	DEBUG_PRINT("VECTOR DEBUG");	
-
-		 	for( std::vector<string>::const_iterator i = dict.begin(); i != dict.end(); ++i)
-		    	std::cout << *i << ' ' << endl;
-	 	}
-}
-
-void DEBUG_ARRAY(implementation *dict){
-	for(int i = 0; i < NUM_PFUNC; i++) {
-		DEBUG_PRINT("HEADER");
-		DEBUG_VECTOR(dict[i].header);
-		DEBUG_PRINT("LIST");
-		DEBUG_VECTOR(dict[i].collection);
-
-	}
-}
-
 void saveProcessedProgram(vector<string>& header, vector<string>& list) {
 	ofstream output_file("./parpost.cc");
     
@@ -178,9 +187,6 @@ int main (int argc, char *argv[]) {
 
 	load(parallelFuncs);
 
-	//DEBUG_PRINT("parallelFuncs");
-	//DEBUG_ARRAY(parallelFuncs);
-	
 	ifstream in_stream;
 	
 	string line;
