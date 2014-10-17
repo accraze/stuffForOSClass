@@ -152,14 +152,14 @@ void load(implementation *parallelFuncs) {
 	parallelFuncs[1].collection.push_back("  int z, rc;");
 	parallelFuncs[1].collection.push_back("  thread_data_t thr_data[NUM_THREADS];");
 	parallelFuncs[1].collection.push_back("  ");
-	parallelFuncs[1].collection.push_back("  for (z = 0; i < NUM_THREADS; ++z) {");
+	parallelFuncs[1].collection.push_back("  for (z = 0; z < NUM_THREADS; ++z) {");
 	parallelFuncs[1].collection.push_back("    thr_data[z].tid = z;");	
 	parallelFuncs[1].collection.push_back("    if ((rc = pthread_create(&thr[z], NULL, do_work, &thr_data[z]))) {");
 	parallelFuncs[1].collection.push_back("      fprintf(stderr, \"error: pthread_create, rc: %d\\n\", rc);");
 	parallelFuncs[1].collection.push_back("      return EXIT_FAILURE;");
 	parallelFuncs[1].collection.push_back("    }");
 	parallelFuncs[1].collection.push_back("  }");
-	parallelFuncs[1].collection.push_back("  for (z = 0; i < NUM_THREADS; ++z) {");
+	parallelFuncs[1].collection.push_back("  for (z = 0; z < NUM_THREADS; ++z) {");
 	parallelFuncs[1].collection.push_back("    pthread_join(thr[z], NULL);");
 	parallelFuncs[1].collection.push_back("  }");
 	parallelFuncs[1].collection.push_back(" ");
@@ -178,7 +178,7 @@ void load(implementation *parallelFuncs) {
 	parallelFuncs[1].header.push_back(" int start = tid * chunk_size; ");
 	parallelFuncs[1].header.push_back(" int end = start + chunk_size;");
 	parallelFuncs[1].header.push_back("  ");
-	parallelFuncs[1].header.push_back(" for(int i = start; i < end; i++) printf( \"Thread %d executes loop iteration %d\\n\", tid, i );");
+	parallelFuncs[1].header.push_back(" for(int i = start; i < end; i++) printf( \"Thread %d executes loop iteration %d\\n\", tid, i );;");
 	parallelFuncs[1].header.push_back("  ");
 	parallelFuncs[1].header.push_back("  pthread_exit(NULL);");
 	parallelFuncs[1].header.push_back("}");

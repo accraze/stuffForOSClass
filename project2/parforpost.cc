@@ -17,7 +17,7 @@ void *do_work(void *arg) {
  int start = tid * chunk_size; 
  int end = start + chunk_size;
   
- for(int i = start; i < end; i++) printf( "Thread %d executes loop iteration %d\n", tid, i );
+ for(int i = start; i < end; i++) printf( "Thread %d executes loop iteration %d\n", tid, i );;
   
   pthread_exit(NULL);
 }
@@ -25,19 +25,19 @@ void *do_work(void *arg) {
 int main()
 {
 	int i, n;
-  printf("YO!");
+
   pthread_t thr[NUM_THREADS];
   int z, rc;
   thread_data_t thr_data[NUM_THREADS];
   
-  for (z = 0; i < NUM_THREADS; ++z) {
+  for (z = 0; z < NUM_THREADS; ++z) {
     thr_data[z].tid = z;
     if ((rc = pthread_create(&thr[z], NULL, do_work, &thr_data[z]))) {
       fprintf(stderr, "error: pthread_create, rc: %d\n", rc);
       return EXIT_FAILURE;
     }
   }
-  for (z = 0; i < NUM_THREADS; ++z) {
+  for (z = 0; z < NUM_THREADS; ++z) {
     pthread_join(thr[z], NULL);
   }
  
