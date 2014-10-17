@@ -31,6 +31,7 @@ void load(implementation *parallelFuncs);
 string checkForDirective (string line, vector<string>& header);
 string getNumThreads(string directive);
 void addNumThreads(string inputLine, vector<string>& header);
+void removeOmpRefs (vector<string>& functionsList);
 
 
  //**************************//
@@ -148,18 +149,18 @@ void load(implementation *parallelFuncs) {
 
 	parallelFuncs[1].name = "parfor";
 	parallelFuncs[1].collection.push_back("  pthread_t thr[NUM_THREADS];");
-	parallelFuncs[1].collection.push_back("  int i, rc;");
+	parallelFuncs[1].collection.push_back("  int z, rc;");
 	parallelFuncs[1].collection.push_back("  thread_data_t thr_data[NUM_THREADS];");
 	parallelFuncs[1].collection.push_back("  ");
-	parallelFuncs[1].collection.push_back("  for (i = 0; i < NUM_THREADS; ++i) {");
-	parallelFuncs[1].collection.push_back("    thr_data[i].tid = i;");	
-	parallelFuncs[1].collection.push_back("    if ((rc = pthread_create(&thr[i], NULL, do_work, &thr_data[i]))) {");
+	parallelFuncs[1].collection.push_back("  for (z = 0; i < NUM_THREADS; ++z) {");
+	parallelFuncs[1].collection.push_back("    thr_data[z].tid = z;");	
+	parallelFuncs[1].collection.push_back("    if ((rc = pthread_create(&thr[z], NULL, do_work, &thr_data[z]))) {");
 	parallelFuncs[1].collection.push_back("      fprintf(stderr, \"error: pthread_create, rc: %d\\n\", rc);");
 	parallelFuncs[1].collection.push_back("      return EXIT_FAILURE;");
 	parallelFuncs[1].collection.push_back("    }");
 	parallelFuncs[1].collection.push_back("  }");
-	parallelFuncs[1].collection.push_back("  for (i = 0; i < NUM_THREADS; ++i) {");
-	parallelFuncs[1].collection.push_back("    pthread_join(thr[i], NULL);");
+	parallelFuncs[1].collection.push_back("  for (z = 0; i < NUM_THREADS; ++z) {");
+	parallelFuncs[1].collection.push_back("    pthread_join(thr[z], NULL);");
 	parallelFuncs[1].collection.push_back("  }");
 	parallelFuncs[1].collection.push_back(" ");
 	//parallelFuncs[0].header.push_back("#define NUM_THREADS ");
@@ -299,6 +300,33 @@ string getProgramName(string fileName) {
 	return programName;
 }
 
+// void removeOmpRefs (vector<string>& functionsList) {
+// 	// string *scr;
+// 	// scr = new string[functionsList.size()];
+// 	// for(int i=0; i<functionsList.size(); i++){
+//  //   		scr[i] = functionsList[i];//Copy the vector to the string
+// 	// }
+
+// 	// for(int j = 0; j < functionsList.size(); j++){
+// 	// 	int check = scr[j].find(' omp_');
+
+// 	// 	if(check != std::string::npos){
+// 	// 		DEBUG_PRINT("FOUND OMP REF");
+// 	// 		DEBUG_PRINT(scr[j]);
+// 	// 		functionsList.erase(functionsList.begin() + j);
+// 	// 	}
+// 	// }
+
+// 	for( std::vector<string>::const_iterator i = functionsList.begin(); i != functionsList.end(); ++i) {
+// 		string ele = i + "";
+
+// 		int check = ele.find('omp');
+// 		if(check != std::string::npos){
+// 			i = "";
+// 		}
+// 	}
+// }
+
 int main (int argc, char *argv[]) {
 	implementation parallelFuncs[NUM_PFUNC];
 	vector<string> header;
@@ -330,13 +358,15 @@ int main (int argc, char *argv[]) {
 			
 			skipInputLines(in_stream, list);
 		} else {
-			list.push_back(line);
+			int check = line.find("omp");
+			if(!(check != std::string::npos))
+				list.push_back(line);
 		}	
 	}
 
-	DEBUG_VECTOR(header);
-	DEBUG_VECTOR(list);
-
+	//DEBUG_VECTOR(header);
+	//DEBUG_VECTOR(list);
+	//removeOmpRefs(list);
 	saveProcessedProgram(header, list, programName);
 	
 	in_stream.close();

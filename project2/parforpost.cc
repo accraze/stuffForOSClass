@@ -25,23 +25,22 @@ void *do_work(void *arg) {
 int main()
 {
 	int i, n;
-
+  printf("YO!");
   pthread_t thr[NUM_THREADS];
-  int i, rc;
+  int z, rc;
   thread_data_t thr_data[NUM_THREADS];
   
-  for (i = 0; i < NUM_THREADS; ++i) {
-    thr_data[i].tid = i;
-    if ((rc = pthread_create(&thr[i], NULL, do_work, &thr_data[i]))) {
+  for (z = 0; i < NUM_THREADS; ++z) {
+    thr_data[z].tid = z;
+    if ((rc = pthread_create(&thr[z], NULL, do_work, &thr_data[z]))) {
       fprintf(stderr, "error: pthread_create, rc: %d\n", rc);
       return EXIT_FAILURE;
     }
   }
-  for (i = 0; i < NUM_THREADS; ++i) {
-    pthread_join(thr[i], NULL);
+  for (z = 0; i < NUM_THREADS; ++z) {
+    pthread_join(thr[z], NULL);
   }
  
-		printf( "Thread %d executes loop iteration %d\n", omp_get_thread_num(), i );
 
 	return(0);
 }
