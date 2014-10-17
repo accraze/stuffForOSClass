@@ -1,3 +1,3 @@
 All:
-	g++ main.cc loader.cc -o a.out
+	g++ main.cc -o a.out
 	./a.out

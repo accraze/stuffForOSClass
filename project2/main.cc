@@ -25,12 +25,12 @@ void DEBUG_ARRAY(implementation *dict);
 void _addPThreadCodeToNewCode(string name, vector<string>& list,vector<string>& header, implementation *dict);
 void loadVector(vector<string>& source, vector<string>& target);
 void saveProcessedProgram(vector<string>& header, vector<string>& list, string programName);
-void skipInputLines(ifstream& file);
+void skipInputLines(ifstream& file, vector<string>& list);
 void parseHeader(ifstream& file, vector<string>& header);
 void load(implementation *parallelFuncs);
-string checkForDirective (string line);
+string checkForDirective (string line, vector<string>& header);
 string getNumThreads(string directive);
-void addNumThreads(string inputLine, implementation *dict);
+void addNumThreads(string inputLine, vector<string>& header);
 
 
  //**************************//
@@ -62,23 +62,32 @@ void DEBUG_ARRAY(implementation *dict){
 	}
 }
 
-string checkForDirective (string line, implementation *dict) {
-	int check = line.find("#pragma omp parallel ");
+string checkForDirective (string line, vector<string>& header) {
+	
+	int check = line.find("#pragma omp parallel for ");
 	if(check != std::string::npos) {
-		addNumThreads(line, dict);
+		addNumThreads(line, header);
 
+		return "parfor";
+	}
+
+	check = line.find("#pragma omp parallel ");
+	if(check != std::string::npos) {
+		addNumThreads(line, header);
 		return "par";
 	}
+
+
 	return "null";
 }
 
-void addNumThreads(string inputLine, implementation *dict) {
+void addNumThreads(string inputLine, vector<string>& header) {
 	string num = getNumThreads(inputLine);
 
 	string line = "#define NUM_THREADS ";
 	line += num;
 
-	dict[0].header.insert(dict[0].header.begin(),line);
+	header.push_back(line);
 }
 
 string getNumThreads(string directive) {
@@ -154,6 +163,7 @@ void load(implementation *parallelFuncs) {
 	parallelFuncs[1].collection.push_back("  }");
 	parallelFuncs[1].collection.push_back(" ");
 	//parallelFuncs[0].header.push_back("#define NUM_THREADS ");
+	parallelFuncs[1].header.push_back("#define SIZE 16");
 	parallelFuncs[1].header.push_back(" ");
 	parallelFuncs[1].header.push_back("typedef struct _thread_data_t {");
 	parallelFuncs[1].header.push_back("  int tid;");
@@ -195,7 +205,7 @@ void parseHeader(ifstream& file, vector<string>& header) {
 	}
 }
 
-void skipInputLines(ifstream& file) {
+void skipInputLines(ifstream& file, vector<string>& list) {
 	string line;
 
 	std::getline(file, line);
@@ -204,6 +214,17 @@ void skipInputLines(ifstream& file) {
 		
 		while(line != "}") {
 			std::getline(file, line);
+		}
+	} else {
+
+		while(line == "	return(0);"){
+			std::getline(file, line);
+			DEBUG_PRINT(line);
+			if (line == "	return(0);")
+			{
+				list.push_back(line);
+				break;
+			}
 		}
 	}
 }
@@ -292,8 +313,8 @@ int main (int argc, char *argv[]) {
 	string result;
 	
 	//in_stream.open(argv[1]);
-	programName = getProgramName("INPUT/par.cc");
-	in_stream.open("INPUT/par.cc");
+	programName = getProgramName("INPUT/parfor.cc");
+	in_stream.open("INPUT/parfor.cc");
 	
 	parseHeader(in_stream, header);
 
@@ -302,19 +323,19 @@ int main (int argc, char *argv[]) {
 		std::getline (in_stream,line);
 
 		//check line for directives
-		result = checkForDirective(line, parallelFuncs);
+		result = checkForDirective(line, header);
 		
 		if(result != "null"){
 			parseResult(result, header, list, parallelFuncs);
 			
-			skipInputLines(in_stream);
+			skipInputLines(in_stream, list);
 		} else {
 			list.push_back(line);
 		}	
 	}
 
-	//DEBUG_VECTOR(header);
-	//DEBUG_VECTOR(list);
+	DEBUG_VECTOR(header);
+	DEBUG_VECTOR(list);
 
 	saveProcessedProgram(header, list, programName);
 	
