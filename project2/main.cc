@@ -137,6 +137,42 @@ void load(implementation *parallelFuncs) {
 	parallelFuncs[0].header.push_back("}");
 	parallelFuncs[0].header.push_back("");
 
+	parallelFuncs[1].name = "parfor";
+	parallelFuncs[1].collection.push_back("  pthread_t thr[NUM_THREADS];");
+	parallelFuncs[1].collection.push_back("  int i, rc;");
+	parallelFuncs[1].collection.push_back("  thread_data_t thr_data[NUM_THREADS];");
+	parallelFuncs[1].collection.push_back("  ");
+	parallelFuncs[1].collection.push_back("  for (i = 0; i < NUM_THREADS; ++i) {");
+	parallelFuncs[1].collection.push_back("    thr_data[i].tid = i;");	
+	parallelFuncs[1].collection.push_back("    if ((rc = pthread_create(&thr[i], NULL, do_work, &thr_data[i]))) {");
+	parallelFuncs[1].collection.push_back("      fprintf(stderr, \"error: pthread_create, rc: %d\\n\", rc);");
+	parallelFuncs[1].collection.push_back("      return EXIT_FAILURE;");
+	parallelFuncs[1].collection.push_back("    }");
+	parallelFuncs[1].collection.push_back("  }");
+	parallelFuncs[1].collection.push_back("  for (i = 0; i < NUM_THREADS; ++i) {");
+	parallelFuncs[1].collection.push_back("    pthread_join(thr[i], NULL);");
+	parallelFuncs[1].collection.push_back("  }");
+	parallelFuncs[1].collection.push_back(" ");
+	//parallelFuncs[0].header.push_back("#define NUM_THREADS ");
+	parallelFuncs[1].header.push_back(" ");
+	parallelFuncs[1].header.push_back("typedef struct _thread_data_t {");
+	parallelFuncs[1].header.push_back("  int tid;");
+	parallelFuncs[1].header.push_back("} thread_data_t;");
+	parallelFuncs[1].header.push_back(" ");
+	parallelFuncs[1].header.push_back("void *do_work(void *arg) {");
+	parallelFuncs[1].header.push_back("  thread_data_t *data = (thread_data_t *)arg;");
+	parallelFuncs[1].header.push_back("  ");
+	parallelFuncs[1].header.push_back(" int tid = data->tid;");
+	parallelFuncs[1].header.push_back(" int chunk_size = (SIZE / NUM_THREADS); ");
+	parallelFuncs[1].header.push_back(" int start = tid * chunk_size; ");
+	parallelFuncs[1].header.push_back(" int end = start + chunk_size;");
+	parallelFuncs[1].header.push_back("  ");
+	parallelFuncs[1].header.push_back(" for(int i = start; i < end; i++) printf( \"Thread %d executes loop iteration %d\\n\", tid, i );");
+	parallelFuncs[1].header.push_back("  ");
+	parallelFuncs[1].header.push_back("  pthread_exit(NULL);");
+	parallelFuncs[1].header.push_back("}");
+	parallelFuncs[1].header.push_back("");
+
 	DEBUG_PRINT("ALL LOADED@!!@");
 	//DEBUG_ARRAY(parallelFuncs);
 }
