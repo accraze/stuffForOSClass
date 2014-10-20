@@ -5,6 +5,7 @@
 #include <pthread.h>
 
 #define NUM_THREADS 4
+#define SIZE 5
 
 pthread_mutex_t var=PTHREAD_MUTEX_INITIALIZER;
 int sum, a[5];
@@ -21,9 +22,14 @@ void *do_work(void *arg) {
   thread_data_t *data = (thread_data_t *)arg;
   data->local_sum = 0; 
 
-  int local_sum, i;
+  int i;
 
-  for(i = 0; i< 5; i++) data->local_sum += a[i];;
+  int tid = data->tid; 
+  int chunk_size = (SIZE / NUM_THREADS); 
+  int start = tid * chunk_size; 
+  int end = start + chunk_size;
+
+  for(i = start; i< end; i++) data->local_sum += a[i];;
 
   pthread_mutex_lock(&var);  // lock the critical section
 

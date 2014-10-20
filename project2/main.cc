@@ -184,6 +184,46 @@ void load(implementation *parallelFuncs) {
 	parallelFuncs[1].header.push_back("}");
 	parallelFuncs[1].header.push_back("");
 
+	parallelFuncs[2].name = "critical";
+	parallelFuncs[2].collection.push_back("  pthread_t thr[NUM_THREADS];");
+	parallelFuncs[2].collection.push_back("  int z, rc;");
+	parallelFuncs[2].collection.push_back("  thread_data_t thr_data[NUM_THREADS];");
+	parallelFuncs[2].collection.push_back("  ");
+	parallelFuncs[2].collection.push_back("  for (z = 0; z < NUM_THREADS; ++z) {");
+	parallelFuncs[2].collection.push_back("    thr_data[z].tid = z;");	
+	parallelFuncs[2].collection.push_back("    if ((rc = pthread_create(&thr[z], NULL, do_work, &thr_data[z]))) {");
+	parallelFuncs[2].collection.push_back("      fprintf(stderr, \"error: pthread_create, rc: %d\\n\", rc);");
+	parallelFuncs[2].collection.push_back("      return EXIT_FAILURE;");
+	parallelFuncs[2].collection.push_back("    }");
+	parallelFuncs[2].collection.push_back("  }");
+	parallelFuncs[2].collection.push_back("  for (z = 0; z < NUM_THREADS; ++z) {");
+	parallelFuncs[2].collection.push_back("    pthread_join(thr[z], NULL);");
+	parallelFuncs[2].collection.push_back("  }");
+	parallelFuncs[2].collection.push_back(" ");
+	//parallelFuncs[0].header.push_back("#define NUM_THREADS ");
+	parallelFuncs[2].header.push_back("pthread_mutex_t var=PTHREAD_MUTEX_INITIALIZER;");
+	parallelFuncs[2].header.push_back("int sum, a[5];");
+	parallelFuncs[2].header.push_back(" ");
+	parallelFuncs[2].header.push_back(" ");
+	parallelFuncs[2].header.push_back("typedef struct _thread_data_t {");
+	parallelFuncs[2].header.push_back("  int tid;");
+	parallelFuncs[2].header.push_back("} thread_data_t;");
+	parallelFuncs[2].header.push_back(" ");
+	parallelFuncs[2].header.push_back("void *do_work(void *arg) {");
+	parallelFuncs[2].header.push_back("  thread_data_t *data = (thread_data_t *)arg;");
+	parallelFuncs[2].header.push_back("  ");
+	parallelFuncs[2].header.push_back(" int tid = data->tid;");
+	parallelFuncs[2].header.push_back(" int chunk_size = (SIZE / NUM_THREADS); ");
+	parallelFuncs[2].header.push_back(" int start = tid * chunk_size; ");
+	parallelFuncs[2].header.push_back(" int end = start + chunk_size;");
+	parallelFuncs[2].header.push_back("  ");
+	parallelFuncs[2].header.push_back(" for(int i = start; i < end; i++) printf( \"Thread %d executes loop iteration %d\\n\", tid, i );;");
+	parallelFuncs[2].header.push_back("  ");
+	parallelFuncs[2].header.push_back("  pthread_exit(NULL);");
+	parallelFuncs[2].header.push_back("}");
+	parallelFuncs[2].header.push_back("");
+
+
 	DEBUG_PRINT("ALL LOADED@!!@");
 	//DEBUG_ARRAY(parallelFuncs);
 }
@@ -327,6 +367,43 @@ string getProgramName(string fileName) {
 // 	}
 // }
 
+void _convertDirectives(){
+	printf("YO!\n");
+}
+
+void _convertClauses(){
+	printf("YO!\n");
+}
+
+void _convertThreadIdentifiers()){
+	/* This function looks for all calls to the
+	 openmp_get_thread_num runtime library and
+	 replaces them with pthread implementation
+	 */
+
+	while(!in_stream.eof())
+	{
+		std::getline (in_stream,line);
+		int check = line.find("omp_get_thread_num()");
+
+		if(check != std::string::npos){
+			replace(line, "omp_get_thread_num()", "data->id");
+		}
+
+			
+	}
+}
+
+bool replace(std::string& str, const std::string& from, const std::string& to) {
+    // this function replaces part of a string with another string
+
+    size_t start_pos = str.find(from);
+    if(start_pos == std::string::npos)
+        return false;
+    str.replace(start_pos, from.length(), to);
+    return true;
+}
+
 int main (int argc, char *argv[]) {
 	implementation parallelFuncs[NUM_PFUNC];
 	vector<string> header;
@@ -345,7 +422,9 @@ int main (int argc, char *argv[]) {
 	in_stream.open("INPUT/parfor.cc");
 	
 	parseHeader(in_stream, header);
-
+	//convertDirectives()
+	//convertClauses()
+	//convertThreadIdentifiers()
 	while(!in_stream.eof())
 	{
 		std::getline (in_stream,line);
