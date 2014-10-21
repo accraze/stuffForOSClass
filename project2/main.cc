@@ -15,6 +15,9 @@ typedef struct implementation {
   std::vector<std::string> header;
 } implementation;
 
+
+implementation parallelFuncs[NUM_PFUNC];
+
 //************************ //
 //      Declarations      //
 //***********************//
@@ -32,6 +35,8 @@ string checkForDirective (string line, vector<string>& header);
 string getNumThreads(string directive);
 void addNumThreads(string inputLine, vector<string>& header);
 void removeOmpRefs (vector<string>& functionsList);
+void parseProgram (ifstream& in_stream, vector<string>& header, vector<string>& list);
+bool replace(std::string& str, const std::string& from, const std::string& to);
 
 
  //**************************//
@@ -375,11 +380,12 @@ void _convertClauses(){
 	printf("YO!\n");
 }
 
-void _convertThreadIdentifiers()){
+void _convertThreadIdentifiers(ifstream& in_stream){
 	/* This function looks for all calls to the
 	 openmp_get_thread_num runtime library and
 	 replaces them with pthread implementation
 	 */
+	string line;
 
 	while(!in_stream.eof())
 	{
@@ -390,7 +396,7 @@ void _convertThreadIdentifiers()){
 			replace(line, "omp_get_thread_num()", "data->id");
 		}
 
-			
+
 	}
 }
 
@@ -404,27 +410,10 @@ bool replace(std::string& str, const std::string& from, const std::string& to) {
     return true;
 }
 
-int main (int argc, char *argv[]) {
-	implementation parallelFuncs[NUM_PFUNC];
-	vector<string> header;
-	vector<string> list;
-	string programName;
-
-	load(parallelFuncs);
-
-	ifstream in_stream;
-	
+void parseProgram (ifstream& in_stream, vector<string>& header, vector<string>& list){
 	string line;
 	string result;
-	
-	//in_stream.open(argv[1]);
-	programName = getProgramName("INPUT/parfor.cc");
-	in_stream.open("INPUT/parfor.cc");
-	
-	parseHeader(in_stream, header);
-	//convertDirectives()
-	//convertClauses()
-	//convertThreadIdentifiers()
+
 	while(!in_stream.eof())
 	{
 		std::getline (in_stream,line);
@@ -442,6 +431,29 @@ int main (int argc, char *argv[]) {
 				list.push_back(line);
 		}	
 	}
+}
+
+
+int main (int argc, char *argv[]) {
+	
+	vector<string> header;
+	vector<string> list;
+	string programName;
+
+	load(parallelFuncs);
+
+	ifstream in_stream;
+	
+	string line;
+	string result;
+	
+	//in_stream.open(argv[1]);
+	programName = getProgramName("INPUT/parfor.cc");
+	in_stream.open("INPUT/parfor.cc");
+	
+	parseHeader(in_stream, header);
+
+	parseProgram(in_stream, header, list);
 
 	//DEBUG_VECTOR(header);
 	//DEBUG_VECTOR(list);
