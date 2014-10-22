@@ -12,7 +12,7 @@ int sum, a[5];
 /* create thread argument struct for thr_func() */
 typedef struct _thread_data_t {
   int tid;
-  int local_sum;
+	
 } thread_data_t;
 
 
@@ -29,7 +29,7 @@ void *do_work(void *arg) {
   int start = tid * chunk_size; 
   int end = start + chunk_size;
 
-  for(i = start; i< end; i++) data->local_sum += a[i];;
+  for(i = start; i < end; i++) data->local_sum += a[i];;
 
   pthread_mutex_lock(&var);  // lock the critical section
 

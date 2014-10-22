@@ -37,6 +37,8 @@ void addNumThreads(string inputLine, vector<string>& header);
 void removeOmpRefs (vector<string>& functionsList);
 void parseProgram (ifstream& in_stream, vector<string>& header, vector<string>& list);
 bool replace(std::string& str, const std::string& from, const std::string& to);
+void _checkNumThreads(string line, vector<string>& header);
+void _convertDirective(string resultName,vector<string>& header, vector<string>& list, implementation *dict);
 
 
  //**************************//
@@ -72,8 +74,6 @@ string checkForDirective (string line, vector<string>& header) {
 	
 	int check = line.find("#pragma omp parallel for ");
 	if(check != std::string::npos) {
-		addNumThreads(line, header);
-
 		return "parfor";
 	}
 
@@ -88,6 +88,10 @@ string checkForDirective (string line, vector<string>& header) {
 }
 
 void addNumThreads(string inputLine, vector<string>& header) {
+	// This method gets the number of threads from
+	// the openMP program and puts it in the header
+	// of the Pthreads implementation.
+
 	string num = getNumThreads(inputLine);
 
 	string line = "#define NUM_THREADS ";
@@ -284,27 +288,6 @@ void loadVector(vector<string>& source, vector<string>& target) {
  	DEBUG_VECTOR(target);
 }
 
-void _addPThreadCodeToNewCode(string name, vector<string>& list,vector<string>& header, implementation *dict) {
-	for(int i = 0; i < NUM_PFUNC; i++) {
-		if(dict[i].name == name) {
-			
-			loadVector(dict[i].header, header);
-			loadVector(dict[i].collection, list);
-		}
-	}
-}
-
-void parseResult(string resultName,vector<string>& header, vector<string>& list, implementation *dict) {
- 	
- 	for(int i = 0; i < NUM_PFUNC; i++){
- 	
- 		if(dict[i].name == resultName) {
- 			_addPThreadCodeToNewCode(resultName, list, header, dict);
- 			break;
- 		}
- 	}
- }
-
 void saveProcessedProgram(vector<string>& header, vector<string>& functionsList, string programName) {
 	/* Takes the processed header and functionList and writes to file */
 
@@ -345,39 +328,47 @@ string getProgramName(string fileName) {
 	return programName;
 }
 
-// void removeOmpRefs (vector<string>& functionsList) {
-// 	// string *scr;
-// 	// scr = new string[functionsList.size()];
-// 	// for(int i=0; i<functionsList.size(); i++){
-//  //   		scr[i] = functionsList[i];//Copy the vector to the string
-// 	// }
-
-// 	// for(int j = 0; j < functionsList.size(); j++){
-// 	// 	int check = scr[j].find(' omp_');
-
-// 	// 	if(check != std::string::npos){
-// 	// 		DEBUG_PRINT("FOUND OMP REF");
-// 	// 		DEBUG_PRINT(scr[j]);
-// 	// 		functionsList.erase(functionsList.begin() + j);
-// 	// 	}
-// 	// }
-
-// 	for( std::vector<string>::const_iterator i = functionsList.begin(); i != functionsList.end(); ++i) {
-// 		string ele = i + "";
-
-// 		int check = ele.find('omp');
-// 		if(check != std::string::npos){
-// 			i = "";
-// 		}
-// 	}
-// }
-
-void _convertDirectives(){
-	printf("YO!\n");
+void _addPThreadCodeToNewCode(string name, vector<string>& list,vector<string>& header, implementation *dict) {
+	for(int i = 0; i < NUM_PFUNC; i++) {
+		if(dict[i].name == name) {
+			
+			loadVector(dict[i].header, header);
+			loadVector(dict[i].collection, list);
+		}
+	}
 }
 
-void _convertClauses(){
-	printf("YO!\n");
+void _convertDirective(string resultName,vector<string>& header, vector<string>& list, implementation *dict) {
+ 	int i;
+ 	for(i = 0; i < NUM_PFUNC; i++){
+ 	
+ 		if(dict[i].name == resultName) {
+ 			_addPThreadCodeToNewCode(resultName, list, header, dict);
+ 			break;
+ 		}
+ 	}
+ }
+
+void _convertClauses(string line, vector<string>& header){
+		_checkNumThreads(line, header);
+		//checkPrivate(line, header);
+		// checkShared(line, header);
+
+		int check = line.find("omp_get_thread_num()");
+
+		if(check != std::string::npos){
+			replace(line, "omp_get_thread_num()", "data->id");
+		}
+
+	addNumThreads(line, header);
+}
+
+void _checkNumThreads(string line, vector<string>& header) {
+	int check = line.find("num_threads");
+
+	if(check != std::string::npos){
+		addNumThreads(line, header);
+	}
 }
 
 void _convertThreadIdentifiers(ifstream& in_stream){
@@ -385,6 +376,7 @@ void _convertThreadIdentifiers(ifstream& in_stream){
 	 openmp_get_thread_num runtime library and
 	 replaces them with pthread implementation
 	 */
+	
 	string line;
 
 	while(!in_stream.eof())
@@ -395,34 +387,36 @@ void _convertThreadIdentifiers(ifstream& in_stream){
 		if(check != std::string::npos){
 			replace(line, "omp_get_thread_num()", "data->id");
 		}
-
-
 	}
 }
 
 bool replace(std::string& str, const std::string& from, const std::string& to) {
     // this function replaces part of a string with another string
 
-    size_t start_pos = str.find(from);
-    if(start_pos == std::string::npos)
+    size_t start_pos = str.find(from); // find start
+    if(start_pos == std::string::npos) 
         return false;
-    str.replace(start_pos, from.length(), to);
+    str.replace(start_pos, from.length(), to); //replace
     return true;
 }
 
 void parseProgram (ifstream& in_stream, vector<string>& header, vector<string>& list){
 	string line;
-	string result;
+	string directive;
 
 	while(!in_stream.eof())
 	{
 		std::getline (in_stream,line);
 
 		//check line for directives
-		result = checkForDirective(line, header);
+		directive = checkForDirective(line, header);
 		
-		if(result != "null"){
-			parseResult(result, header, list, parallelFuncs);
+		if(directive != "null"){
+			_convertClauses(line, header);
+			_convertDirective(directive, header, list, parallelFuncs);
+			
+			//_convertThreadIdentifiers();
+			//parseResult(directive, header, list, parallelFuncs);
 			
 			skipInputLines(in_stream, list);
 		} else {
