@@ -3,7 +3,6 @@
 #include 	<pthread.h>
 
 #define NUM_THREADS 4
-#define NUM_THREADS 4
 #define SIZE 16
  
 typedef struct _thread_data_t {

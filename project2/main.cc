@@ -18,6 +18,7 @@ typedef struct implementation {
 
 
 implementation parallelFuncs[NUM_PFUNC];
+vector<string> variableList;
 
 //************************ //
 //      Declarations      //
@@ -73,8 +74,6 @@ void DEBUG_ARRAY(implementation *dict){
 }
 
 string checkForDirective (string line, vector<string>& header) {
-	
-
 
 	int check = line.find("#pragma omp parallel for ");
 	if(check != std::string::npos) {
@@ -362,17 +361,17 @@ void _convertDirective(string resultName,vector<string>& header, vector<string>&
  }
 
 void _convertClauses(string line, vector<string>& header){
-		_checkNumThreads(line, header);
-		//checkPrivate(line, header);
-		// checkShared(line, header);
+	_checkNumThreads(line, header);
+	//checkPrivate(line, header);
+	//_checkShared(line, header);
 
-		int check = line.find("omp_get_thread_num()");
+	int check = line.find("omp_get_thread_num()");
 
-		if(check != std::string::npos){
-			replace(line, "omp_get_thread_num()", "data->id");
-		}
+	if(check != std::string::npos){
+		replace(line, "omp_get_thread_num()", "data->id");
+	}
 
-	addNumThreads(line, header);
+	//addNumThreads(line, header);
 }
 
 void _checkNumThreads(string line, vector<string>& header) {
@@ -419,6 +418,43 @@ bool replace(std::string& str, const std::string& from, const std::string& to) {
     return true;
 }
 
+void checkForVariables(string line) {
+	int check  = line.find("int ");
+	if (check != std::string::npos){
+		string list = line.substr(check, line.length()); //get rid of int type
+
+		variableList.push_back(list);
+
+		DEBUG_PRINT(list);	
+
+		// check  = line.find(",");
+		
+		// if(check != std::string::npos){
+			
+		// 	while(check != std::string::npos) {
+		// 		string var = line.substr(0, check); //get rid of int type
+				
+		// 		variableList.push_back(var);
+				
+		// 		string list = line.substr(check, line.length()); //get rid of int type
+			
+		// 		check  = line.find(",");
+		// 	}
+		// }
+		// else {
+		// 	string noInt = line.substr(check, line.length());
+			
+		// 	string var = noInt.substr(0, noInt.length() - 1);
+
+		// 	DEBUG_PRINT(var);
+			
+		// 	variableList.push_back(var);	
+		// }
+		
+		
+	}
+}
+
 void parseProgram (ifstream& in_stream, vector<string>& header, vector<string>& list){
 	/*  
 		Runs through each line of the openMP program and
@@ -433,6 +469,8 @@ void parseProgram (ifstream& in_stream, vector<string>& header, vector<string>& 
 	while(!in_stream.eof())
 	{
 		std::getline (in_stream,line);
+		//check for variable instant
+		checkForVariables(line);
 
 		//check line for directives
 		directive = checkForDirective(line, header);
@@ -455,9 +493,7 @@ void parseProgram (ifstream& in_stream, vector<string>& header, vector<string>& 
 	}
 }
 
-
-int main (int argc, char *argv[]) {
-	
+int main (int argc, char *argv[]) {	
 	vector<string> header;
 	vector<string> list;
 	string programName;
@@ -473,21 +509,19 @@ int main (int argc, char *argv[]) {
 	programName = getProgramName("INPUT/parfor.cc");
 	in_stream.open("INPUT/parfor.cc");
 
-	printf("Processing OpenMP program....");
+	printf("Processing OpenMP program....\n");
 	
 	parseHeader(in_stream, header);
-
 	parseProgram(in_stream, header, list);
 
 	//DEBUG_VECTOR(header);
 	//DEBUG_VECTOR(list);
-	//removeOmpRefs(list);
 
-	printf("Writing processed pthread program to file....");
+	printf("Writing processed pthread program to file....\n");
 	
 	saveProcessedProgram(header, list, programName);
 
-	printf("All done!");
+	printf("All done!\n");
 	
 	in_stream.close();
 	
