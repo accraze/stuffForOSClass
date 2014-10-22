@@ -364,6 +364,10 @@ void _convertClauses(string line, vector<string>& header){
 }
 
 void _checkNumThreads(string line, vector<string>& header) {
+	// Checks to see if the num_threads clauses is contained
+	// in the file line. If it is, then the number is parsed
+	// and added as a macro in the pthreads implementation. 
+
 	int check = line.find("num_threads");
 
 	if(check != std::string::npos){
@@ -371,10 +375,11 @@ void _checkNumThreads(string line, vector<string>& header) {
 	}
 }
 
-void _convertThreadIdentifiers(ifstream& in_stream){
-	/* This function looks for all calls to the
-	 openmp_get_thread_num runtime library and
-	 replaces them with pthread implementation
+void _convertThreadIdentifiers(string line, vector<string>& list){
+	/* 
+		This function looks for all calls to the
+	 	openmp_get_thread_num runtime library and
+	 	replaces them with pthread implementation
 	 */
 	
 	string line;
@@ -386,8 +391,12 @@ void _convertThreadIdentifiers(ifstream& in_stream){
 
 		if(check != std::string::npos){
 			replace(line, "omp_get_thread_num()", "data->id");
+			list.push_back(line);
+			return true;
 		}
 	}
+
+	return false;
 }
 
 bool replace(std::string& str, const std::string& from, const std::string& to) {
@@ -401,6 +410,13 @@ bool replace(std::string& str, const std::string& from, const std::string& to) {
 }
 
 void parseProgram (ifstream& in_stream, vector<string>& header, vector<string>& list){
+	/*  
+		Runs through each line of the openMP program and
+	    checks for a directive and clauses. 
+		If the line contains a directive, it will parse the directive and
+		each of the following clauses. 
+	*/
+
 	string line;
 	string directive;
 
@@ -411,18 +427,19 @@ void parseProgram (ifstream& in_stream, vector<string>& header, vector<string>& 
 		//check line for directives
 		directive = checkForDirective(line, header);
 		
-		if(directive != "null"){
+		if (directive != "null") {
+			
 			_convertClauses(line, header);
 			_convertDirective(directive, header, list, parallelFuncs);
 			
-			//_convertThreadIdentifiers();
-			//parseResult(directive, header, list, parallelFuncs);
-			
 			skipInputLines(in_stream, list);
-		} else {
-			int check = line.find("omp");
-			if(!(check != std::string::npos))
+		} 
+		else {
+			bool hasConverted = _convertThreadIdentifiers(line, list);
+			
+			if(!hasConverted){
 				list.push_back(line);
+			}
 		}	
 	}
 }
@@ -456,5 +473,5 @@ int main (int argc, char *argv[]) {
 	
 	in_stream.close();
 	
-return 0;	
+	return 0;	
 }
