@@ -4,10 +4,11 @@
 #include <vector>
 #include <stdio.h>
 
+using namespace std;
+
 #define NUM_PFUNC 6
 #define DEBUG true
 
-using namespace std;
 
 typedef struct implementation {
   string name;
@@ -38,6 +39,7 @@ void removeOmpRefs (vector<string>& functionsList);
 void parseProgram (ifstream& in_stream, vector<string>& header, vector<string>& list);
 bool replace(std::string& str, const std::string& from, const std::string& to);
 void _checkNumThreads(string line, vector<string>& header);
+bool _convertThreadIdentifiers(string line, vector<string>& list);
 void _convertDirective(string resultName,vector<string>& header, vector<string>& list, implementation *dict);
 
 
@@ -72,6 +74,8 @@ void DEBUG_ARRAY(implementation *dict){
 
 string checkForDirective (string line, vector<string>& header) {
 	
+
+
 	int check = line.find("#pragma omp parallel for ");
 	if(check != std::string::npos) {
 		return "parfor";
@@ -105,6 +109,7 @@ string getNumThreads(string directive) {
 		Parses the openMP directive and returns the 
 		number of threads.
 	*/
+
 	string numThreads;
 	int start = directive.find("(");
 	int end = directive.find(")");
@@ -329,6 +334,8 @@ string getProgramName(string fileName) {
 }
 
 void _addPThreadCodeToNewCode(string name, vector<string>& list,vector<string>& header, implementation *dict) {
+	
+
 	for(int i = 0; i < NUM_PFUNC; i++) {
 		if(dict[i].name == name) {
 			
@@ -339,6 +346,11 @@ void _addPThreadCodeToNewCode(string name, vector<string>& list,vector<string>& 
 }
 
 void _convertDirective(string resultName,vector<string>& header, vector<string>& list, implementation *dict) {
+ 	/* 
+ 		matches the resultName name to the correct Pthread implementation stored in dict. 
+ 		Then it adds the new implementation to the program list. 
+ 	*/
+
  	int i;
  	for(i = 0; i < NUM_PFUNC; i++){
  	
@@ -364,9 +376,11 @@ void _convertClauses(string line, vector<string>& header){
 }
 
 void _checkNumThreads(string line, vector<string>& header) {
-	// Checks to see if the num_threads clauses is contained
-	// in the file line. If it is, then the number is parsed
-	// and added as a macro in the pthreads implementation. 
+	/* 
+		Checks to see if the num_threads clauses is contained
+		in the file line. If it is, then the number is parsed
+	 	and added as a macro in the pthreads implementation. 
+	*/
 
 	int check = line.find("num_threads");
 
@@ -375,25 +389,21 @@ void _checkNumThreads(string line, vector<string>& header) {
 	}
 }
 
-void _convertThreadIdentifiers(string line, vector<string>& list){
+bool _convertThreadIdentifiers(string line, vector<string>& list){
 	/* 
 		This function looks for all calls to the
 	 	openmp_get_thread_num runtime library and
 	 	replaces them with pthread implementation
 	 */
 	
-	string line;
+	int check = line.find("omp_get_thread_num()");
 
-	while(!in_stream.eof())
-	{
-		std::getline (in_stream,line);
-		int check = line.find("omp_get_thread_num()");
-
-		if(check != std::string::npos){
-			replace(line, "omp_get_thread_num()", "data->id");
-			list.push_back(line);
-			return true;
-		}
+	if(check != std::string::npos){
+		replace(line, "omp_get_thread_num()", "data->id");
+		
+		list.push_back(line);
+		
+		return true;
 	}
 
 	return false;
@@ -435,9 +445,10 @@ void parseProgram (ifstream& in_stream, vector<string>& header, vector<string>& 
 			skipInputLines(in_stream, list);
 		} 
 		else {
-			bool hasConverted = _convertThreadIdentifiers(line, list);
+			//bool hasConverted = _convertThreadIdentifiers(line, list);
+			int check = line.find("omp");
 			
-			if(!hasConverted){
+			if(check != std::string::npos){
 				list.push_back(line);
 			}
 		}	
@@ -461,6 +472,8 @@ int main (int argc, char *argv[]) {
 	//in_stream.open(argv[1]);
 	programName = getProgramName("INPUT/parfor.cc");
 	in_stream.open("INPUT/parfor.cc");
+
+	printf("Processing OpenMP program....");
 	
 	parseHeader(in_stream, header);
 
@@ -469,7 +482,12 @@ int main (int argc, char *argv[]) {
 	//DEBUG_VECTOR(header);
 	//DEBUG_VECTOR(list);
 	//removeOmpRefs(list);
+
+	printf("Writing processed pthread program to file....");
+	
 	saveProcessedProgram(header, list, programName);
+
+	printf("All done!");
 	
 	in_stream.close();
 	

@@ -23,10 +23,6 @@ void *do_work(void *arg) {
   pthread_exit(NULL);
 }
 
-int main()
-{
-	int i, n;
-
   pthread_t thr[NUM_THREADS];
   int z, rc;
   thread_data_t thr_data[NUM_THREADS];
@@ -42,7 +38,4 @@ int main()
     pthread_join(thr[z], NULL);
   }
  
-
-	return(0);
-}
-
+		printf( "Thread %d executes loop iteration %d\n", omp_get_thread_num(), i );
