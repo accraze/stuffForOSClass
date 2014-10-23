@@ -10,15 +10,11 @@ using namespace std;
 #define DEBUG true
 
 
-std::vector<std::string> header;
-std::vector<std::string> pthreadStruct;
-std::vector<std::string> workFunc;
-std::vector<std::string> collection;
-std::vector<std::string> mainFunc;
-std::vector<std::string> header;
+vector<string> header;
+vector<string> pthreadStruct;
+vector<string> workFunc;
+vector<string> mainFunc;
 
-
-implementation parallelFuncs[NUM_PFUNC];
 vector<string> variableList;
 
 //************************ //
@@ -28,13 +24,13 @@ vector<string> variableList;
 void DEBUG_PRINT (string line);
 void DEBUG_VECTOR(vector<string>& dict);
 void DEBUG_ARRAY(implementation *dict);
-void _addPThreadCodeToNewCode(string name, vector<string>& list,vector<string>& header, implementation *dict);
+void _addPThreadCodeToNewCode(string name, vector<string>& list, vector<string>& header);
 void loadVector(vector<string>& source, vector<string>& target);
 void saveProcessedProgram(vector<string>& header, vector<string>& list, string programName);
-void skipInputLines(ifstream& file, vector<string>& list);
+//void skipInputLines(ifstream& file, vector<string>& list);
 void parseHeader(ifstream& file, vector<string>& header);
-void load(implementation *parallelFuncs);
-string checkForDirective (string line, vector<string>& header);
+void load();
+string checkForDirective (string line);
 string getNumThreads(string directive);
 void addNumThreads(string inputLine, vector<string>& header);
 void removeOmpRefs (vector<string>& functionsList);
@@ -45,6 +41,7 @@ bool _convertThreadIdentifiers(string line, vector<string>& list);
 void _convertDirective(string resultName,vector<string>& header, vector<string>& list, implementation *dict);
 void closeStruct();
 void closeWorkFunc();
+void _buildParCode (ifstream& file)
 
 
  //**************************//
@@ -76,7 +73,7 @@ void DEBUG_ARRAY(implementation *dict){
 	}
 }
 
-string checkForDirective (string line, vector<string>& header) {
+string checkForDirective (string line) {
 
 	int check = line.find("#pragma omp parallel for ");
 	if(check != std::string::npos) {
@@ -141,7 +138,7 @@ void closeWorkFunc(){
 
 }
 
-void load(implementation *parallelFuncs) {
+void load() {
 	/*
 		Loads all pthread template code into 
 		either the pthread struct, the pthread WorkFunction
@@ -236,8 +233,11 @@ void loadVector(vector<string>& source, vector<string>& target) {
  	DEBUG_VECTOR(target);
 }
 
-void saveProcessedProgram(vector<string>& header, vector<string>& functionsList, string programName) {
-	/* Takes the processed header and functionList and writes to file */
+void saveProcessedProgram(string programName) {
+	/* 
+		Takes the processed header, pthreadStruct, workFunc 
+		and mainFunc, then writes to file 
+	*/
 
 	string fileName = "./" + programName + "post.cc";
 
@@ -248,7 +248,9 @@ void saveProcessedProgram(vector<string>& header, vector<string>& functionsList,
     //write the program header to file
     copy(header.begin(), header.end(), output_iterator);
     //write the program functions to file
-    copy(functionsList.begin(), functionsList.end(), output_iterator);
+    copy(pThreadStruct.begin(), pThreadStruct.end(), output_iterator);
+    copy(workFunc.begin(), workFunc.end(), output_iterator);
+    copy(mainFunc.begin(), mainFunc.end(), output_iterator);
 }
 
 string getProgramName(string fileName) {
@@ -288,76 +290,89 @@ void _addPThreadCodeToNewCode(string name, vector<string>& list,vector<string>& 
 	}
 }
 
-void _convertDirective(string resultName,vector<string>& header, vector<string>& list, implementation *dict) {
+void _buildParCode (ifstream& file){
+	string line;
+
+	std::getline (in_stream,line);
+	int check = line.find("return(0)");
+
+	while(check == std::string::npos){
+		_convertThreadIdentifiers(line)
+		workFunc.push_back(line);
+
+		std::getline (in_stream,line);
+		
+		check = line.find("return(0)");
+	}
+}
+
+void _convertDirective(string resultName, ifstream& file) {
  	/* 
- 		matches the resultName name to the correct Pthread implementation stored in dict. 
- 		Then it adds the new implementation to the program list. 
+ 		matches the resultName name to the proper directive,
+ 		Then it builds the new implementation to the program list. 
  	*/
 
- 	int i;
- 	for(i = 0; i < NUM_PFUNC; i++){
- 	
- 		if(dict[i].name == resultName) {
- 			_addPThreadCodeToNewCode(resultName, list, header, dict);
- 			break;
- 		}
- 	}
- }
-
-void _convertClauses(string line, vector<string>& header){
-	_checkNumThreads(line, header);
-	_checkPrivateClause(line, header);
-	//_checkShared(line, header);
-
-	int check = line.find("omp_get_thread_num()");
-
-	if(check != std::string::npos){
-		replace(line, "omp_get_thread_num()", "data->id");
+	if(resultName == "par") {
+		printf("par!!\n");
+		_buildParCode(file);
 	}
-
-	//addNumThreads(line, header);
+	else if(resultName == "parFor"){
+		printf("Parfor!!\n");
+	}
+	else if(resultName == "critical") {
+		printf("Critical!!\n");
+	}
+	else if(resultName == "for") {
+		printf("For!!\n");
+	}
+	else if(resultName == "single") {
+		printf("Single!!\n");
+	}
 }
 
-void _checkPrivateClause(string line){
-	int check = line.find("private(");
+
+
+
+// void _checkPrivateClause(string line){
+// 	int check = line.find("private(");
 	
-	if(check != std::string::npos){
-		string list = line.substr(check, line.length());
-		char privateList[list.size()+1];//as 1 char space for null is also required
-		strcpy(privateList, myWord.c_str());
+// 	if(check != std::string::npos){
+// 		string list = line.substr(check, line.length());
+// 		char privateList[list.size()+1];//as 1 char space for null is also required
+// 		strcpy(privateList, myWord.c_str());
 
-		vector<char> variables;
-		parseVariableList(privateList, variables);
+// 		vector<char> variables;
+// 		parseVariableList(privateList, variables);
 
-		addPrivateVariables(variables);
+// 		addPrivateVariables(variables);
 		
-	}
+// 	}
 
-}
+// }
 
-void addPrivateVariables(vector<char>& variables){
-	/*
-		Adds all private variables to the pThreadStruct
-	*/
+// void addPrivateVariables(vector<char>& variables){
+// 	/*
+// 		Adds all private variables to the pThreadStruct
+// 	*/
 
-	for( std::vector<string>::const_iterator i = variables.begin(); i != variables.end(); ++i)
-		 	string line = "int ";
-		 	line += *i;
-		 	line += ";\n";
-		 	pthreadStruct.push_back(line);
-	 }
-}
+// 	for( std::vector<string>::const_iterator i = variables.begin(); i != variables.end(); ++i)
+// 		 	string line = "int ";
+// 		 	line += *i;
+// 		 	line += ";\n";
+// 		 	pthreadStruct.push_back(line);
+// 	 }
+// }
 
-void parseVariableList(char *list, vector<char>& variables){
-		int i = 0;
+// void parseVariableList(char *list, vector<char>& variables){
+// 		int i = 0;
 		
-		while(privateList[i] != ")"){
-			if(privateList[i] != ","){
-				variables.push_back(privateList[i]);
-			}
-		}
+// 		while(privateList[i] != ")"){
+// 			if(privateList[i] != ","){
+// 				variables.push_back(privateList[i]);
+// 			}
+// 		}
 
-}
+// }
 
 void _checkNumThreads(string line, vector<string>& header) {
 	/* 
@@ -440,7 +455,28 @@ void checkForVariables(string line) {
 	}
 }
 
-void parseProgram (ifstream& in_stream, vector<string>& header, vector<string>& list){
+void _convertClauses(string line){
+	/*
+		checks for the presences of num_threads, private(list)
+		and shared(list) openmp clauses. If they are found, they
+		are converted to pthread implementation and added to our 
+		new program.
+	*/
+
+	_checkNumThreads(line, header);
+	//_checkPrivateClause(line, header);
+	//_checkShared(line, header);
+
+	// int check = line.find("omp_get_thread_num()");
+
+	// if(check != std::string::npos){
+	// 	replace(line, "omp_get_thread_num()", "data->id");
+	// }
+
+	//addNumThreads(line, header);
+}
+
+void parseProgram (ifstream& in_stream){
 	/*  
 		Runs through each line of the openMP program and
 	    checks for a directive and clauses. 
@@ -463,19 +499,18 @@ void parseProgram (ifstream& in_stream, vector<string>& header, vector<string>& 
 		if (directive != "null") {
 			
 			_convertClauses(line);
-			//_convertDirective(directive, header, list, parallelFuncs);
-			
-			//skipInputLines(in_stream, list);
+			_convertDirective(directive, in_stream);
 		} 
 		else {
-			//bool hasConverted = _convertThreadIdentifiers(line, list);
-			int check = line.find("omp");
+			bool hasConverted = _convertThreadIdentifiers(line, list);
 			
-			if(check != std::string::npos){
+			if(!hasConverted){
 				list.push_back(line);
 			}
 		}	
 	}
+	closeStruct();
+	closeWorkFunc();
 }
 
 int main (int argc, char *argv[]) {	
@@ -483,7 +518,7 @@ int main (int argc, char *argv[]) {
 	//vector<string> list;
 	string programName;
 
-	load(parallelFuncs);
+	load();
 
 	ifstream in_stream;
 	
@@ -492,19 +527,21 @@ int main (int argc, char *argv[]) {
 	
 	//in_stream.open(argv[1]);
 	programName = getProgramName("INPUT/parfor.cc");
+	
 	in_stream.open("INPUT/parfor.cc");
 
 	printf("Processing OpenMP program....\n");
 	
-	parseHeader(in_stream, header);
-	parseProgram(in_stream, header, list);
+	parseHeader(in_stream);
+	
+	parseProgram(in_stream);
 
 	//DEBUG_VECTOR(header);
 	//DEBUG_VECTOR(list);
 
 	printf("Writing processed pthread program to file....\n");
 	
-	saveProcessedProgram(header, list, programName);
+	saveProcessedProgram(programName);
 
 	printf("All done!\n");
 	
