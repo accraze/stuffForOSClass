@@ -10,11 +10,13 @@ using namespace std;
 #define DEBUG true
 
 
-typedef struct implementation {
-  string name;
-  std::vector<std::string> collection;
-  std::vector<std::string> header;
-} implementation;
+std::vector<std::string> header;
+std::vector<std::string> pthreadStruct;
+std::vector<std::string> workFunc;
+std::vector<std::string> collection;
+std::vector<std::string> main;
+std::vector<std::string> header;
+
 
 
 implementation parallelFuncs[NUM_PFUNC];
@@ -125,116 +127,132 @@ string getNumThreads(string directive) {
 	return numThreads;
 }
 
+void closeStruct(){
+	pthreadStruct.push_back("} thread_data_t;");
+	pthreadStruct.push_back("");
+
+}
+
 void load(implementation *parallelFuncs) {
-	parallelFuncs[0].name = "par";
-	parallelFuncs[0].collection.push_back("  pthread_t thr[NUM_THREADS];");
-	parallelFuncs[0].collection.push_back("  int i, rc;");
-	parallelFuncs[0].collection.push_back("  thread_data_t thr_data[NUM_THREADS];");
-	parallelFuncs[0].collection.push_back("  ");
-	parallelFuncs[0].collection.push_back("  for (i = 0; i < NUM_THREADS; ++i) {");
-	parallelFuncs[0].collection.push_back("    thr_data[i].tid = i;");	
-	parallelFuncs[0].collection.push_back("    if ((rc = pthread_create(&thr[i], NULL, do_work, &thr_data[i]))) {");
-	parallelFuncs[0].collection.push_back("      fprintf(stderr, \"error: pthread_create, rc: %d\\n\", rc);");
-	parallelFuncs[0].collection.push_back("      return EXIT_FAILURE;");
-	parallelFuncs[0].collection.push_back("    }");
-	parallelFuncs[0].collection.push_back("  }");
-	parallelFuncs[0].collection.push_back("  for (i = 0; i < NUM_THREADS; ++i) {");
-	parallelFuncs[0].collection.push_back("    pthread_join(thr[i], NULL);");
-	parallelFuncs[0].collection.push_back("  }");
-	parallelFuncs[0].collection.push_back(" ");
-	//parallelFuncs[0].header.push_back("#define NUM_THREADS ");
-	parallelFuncs[0].header.push_back(" ");
-	parallelFuncs[0].header.push_back("typedef struct _thread_data_t {");
-	parallelFuncs[0].header.push_back("  int tid;");
-	parallelFuncs[0].header.push_back("} thread_data_t;");
-	parallelFuncs[0].header.push_back(" ");
-	parallelFuncs[0].header.push_back("void *do_work(void *arg) {");
-	parallelFuncs[0].header.push_back("  thread_data_t *data = (thread_data_t *)arg;");
-	parallelFuncs[0].header.push_back("  ");
-	parallelFuncs[0].header.push_back("  printf( \"The parallel region is executed by thread %d\\n\", data->tid );");
-	parallelFuncs[0].header.push_back("  ");
-	parallelFuncs[0].header.push_back("  if( data->tid == 2 )");
-	parallelFuncs[0].header.push_back("		printf( \"   Thread %d does things differently\\n\", data->tid );");
-	parallelFuncs[0].header.push_back("  ");
-	parallelFuncs[0].header.push_back("  pthread_exit(NULL);");
-	parallelFuncs[0].header.push_back("}");
-	parallelFuncs[0].header.push_back("");
+	/*
+		Loads all pthread template code into 
+		either the pthread struct, the pthreadWorkFunction
+		or the main function.
+	*/
+	
+	pthreadStruct.push_back("typedef struct _thread_data_t {");
+	pthreadStruct.push_back("  int tid;");
 
-	parallelFuncs[1].name = "parfor";
-	parallelFuncs[1].collection.push_back("  pthread_t thr[NUM_THREADS];");
-	parallelFuncs[1].collection.push_back("  int z, rc;");
-	parallelFuncs[1].collection.push_back("  thread_data_t thr_data[NUM_THREADS];");
-	parallelFuncs[1].collection.push_back("  ");
-	parallelFuncs[1].collection.push_back("  for (z = 0; z < NUM_THREADS; ++z) {");
-	parallelFuncs[1].collection.push_back("    thr_data[z].tid = z;");	
-	parallelFuncs[1].collection.push_back("    if ((rc = pthread_create(&thr[z], NULL, do_work, &thr_data[z]))) {");
-	parallelFuncs[1].collection.push_back("      fprintf(stderr, \"error: pthread_create, rc: %d\\n\", rc);");
-	parallelFuncs[1].collection.push_back("      return EXIT_FAILURE;");
-	parallelFuncs[1].collection.push_back("    }");
-	parallelFuncs[1].collection.push_back("  }");
-	parallelFuncs[1].collection.push_back("  for (z = 0; z < NUM_THREADS; ++z) {");
-	parallelFuncs[1].collection.push_back("    pthread_join(thr[z], NULL);");
-	parallelFuncs[1].collection.push_back("  }");
-	parallelFuncs[1].collection.push_back(" ");
-	//parallelFuncs[0].header.push_back("#define NUM_THREADS ");
-	parallelFuncs[1].header.push_back("#define SIZE 16");
-	parallelFuncs[1].header.push_back(" ");
-	parallelFuncs[1].header.push_back("typedef struct _thread_data_t {");
-	parallelFuncs[1].header.push_back("  int tid;");
-	parallelFuncs[1].header.push_back("} thread_data_t;");
-	parallelFuncs[1].header.push_back(" ");
-	parallelFuncs[1].header.push_back("void *do_work(void *arg) {");
-	parallelFuncs[1].header.push_back("  thread_data_t *data = (thread_data_t *)arg;");
-	parallelFuncs[1].header.push_back("  ");
-	parallelFuncs[1].header.push_back(" int tid = data->tid;");
-	parallelFuncs[1].header.push_back(" int chunk_size = (SIZE / NUM_THREADS); ");
-	parallelFuncs[1].header.push_back(" int start = tid * chunk_size; ");
-	parallelFuncs[1].header.push_back(" int end = start + chunk_size;");
-	parallelFuncs[1].header.push_back("  ");
-	parallelFuncs[1].header.push_back(" for(int i = start; i < end; i++) printf( \"Thread %d executes loop iteration %d\\n\", tid, i );;");
-	parallelFuncs[1].header.push_back("  ");
-	parallelFuncs[1].header.push_back("  pthread_exit(NULL);");
-	parallelFuncs[1].header.push_back("}");
-	parallelFuncs[1].header.push_back("");
 
-	parallelFuncs[2].name = "critical";
-	parallelFuncs[2].collection.push_back("  pthread_t thr[NUM_THREADS];");
-	parallelFuncs[2].collection.push_back("  int z, rc;");
-	parallelFuncs[2].collection.push_back("  thread_data_t thr_data[NUM_THREADS];");
-	parallelFuncs[2].collection.push_back("  ");
-	parallelFuncs[2].collection.push_back("  for (z = 0; z < NUM_THREADS; ++z) {");
-	parallelFuncs[2].collection.push_back("    thr_data[z].tid = z;");	
-	parallelFuncs[2].collection.push_back("    if ((rc = pthread_create(&thr[z], NULL, do_work, &thr_data[z]))) {");
-	parallelFuncs[2].collection.push_back("      fprintf(stderr, \"error: pthread_create, rc: %d\\n\", rc);");
-	parallelFuncs[2].collection.push_back("      return EXIT_FAILURE;");
-	parallelFuncs[2].collection.push_back("    }");
-	parallelFuncs[2].collection.push_back("  }");
-	parallelFuncs[2].collection.push_back("  for (z = 0; z < NUM_THREADS; ++z) {");
-	parallelFuncs[2].collection.push_back("    pthread_join(thr[z], NULL);");
-	parallelFuncs[2].collection.push_back("  }");
-	parallelFuncs[2].collection.push_back(" ");
-	//parallelFuncs[0].header.push_back("#define NUM_THREADS ");
-	parallelFuncs[2].header.push_back("pthread_mutex_t var=PTHREAD_MUTEX_INITIALIZER;");
-	parallelFuncs[2].header.push_back("int sum, a[5];");
-	parallelFuncs[2].header.push_back(" ");
-	parallelFuncs[2].header.push_back(" ");
-	parallelFuncs[2].header.push_back("typedef struct _thread_data_t {");
-	parallelFuncs[2].header.push_back("  int tid;");
-	parallelFuncs[2].header.push_back("} thread_data_t;");
-	parallelFuncs[2].header.push_back(" ");
-	parallelFuncs[2].header.push_back("void *do_work(void *arg) {");
-	parallelFuncs[2].header.push_back("  thread_data_t *data = (thread_data_t *)arg;");
-	parallelFuncs[2].header.push_back("  ");
-	parallelFuncs[2].header.push_back(" int tid = data->tid;");
-	parallelFuncs[2].header.push_back(" int chunk_size = (SIZE / NUM_THREADS); ");
-	parallelFuncs[2].header.push_back(" int start = tid * chunk_size; ");
-	parallelFuncs[2].header.push_back(" int end = start + chunk_size;");
-	parallelFuncs[2].header.push_back("  ");
-	parallelFuncs[2].header.push_back(" for(int i = start; i < end; i++) printf( \"Thread %d executes loop iteration %d\\n\", tid, i );;");
-	parallelFuncs[2].header.push_back("  ");
-	parallelFuncs[2].header.push_back("  pthread_exit(NULL);");
-	parallelFuncs[2].header.push_back("}");
-	parallelFuncs[2].header.push_back("");
+	// parallelFuncs[0].name = "par";
+	// parallelFuncs[0].collection.push_back("  pthread_t thr[NUM_THREADS];");
+	// parallelFuncs[0].collection.push_back("  int i, rc;");
+	// parallelFuncs[0].collection.push_back("  thread_data_t thr_data[NUM_THREADS];");
+	// parallelFuncs[0].collection.push_back("  ");
+	// parallelFuncs[0].collection.push_back("  for (i = 0; i < NUM_THREADS; ++i) {");
+	// parallelFuncs[0].collection.push_back("    thr_data[i].tid = i;");	
+	// parallelFuncs[0].collection.push_back("    if ((rc = pthread_create(&thr[i], NULL, do_work, &thr_data[i]))) {");
+	// parallelFuncs[0].collection.push_back("      fprintf(stderr, \"error: pthread_create, rc: %d\\n\", rc);");
+	// parallelFuncs[0].collection.push_back("      return EXIT_FAILURE;");
+	// parallelFuncs[0].collection.push_back("    }");
+	// parallelFuncs[0].collection.push_back("  }");
+	// parallelFuncs[0].collection.push_back("  for (i = 0; i < NUM_THREADS; ++i) {");
+	// parallelFuncs[0].collection.push_back("    pthread_join(thr[i], NULL);");
+	// parallelFuncs[0].collection.push_back("  }");
+	// parallelFuncs[0].collection.push_back(" ");
+	// //parallelFuncs[0].header.push_back("#define NUM_THREADS ");
+	// parallelFuncs[0].header.push_back(" ");
+	// parallelFuncs[0].header.push_back("typedef struct _thread_data_t {");
+	// parallelFuncs[0].header.push_back("  int tid;");
+	// parallelFuncs[0].header.push_back("} thread_data_t;");
+	// parallelFuncs[0].header.push_back(" ");
+	// parallelFuncs[0].header.push_back("void *do_work(void *arg) {");
+	// parallelFuncs[0].header.push_back("  thread_data_t *data = (thread_data_t *)arg;");
+	// parallelFuncs[0].header.push_back("  ");
+	// parallelFuncs[0].header.push_back("  printf( \"The parallel region is executed by thread %d\\n\", data->tid );");
+	// parallelFuncs[0].header.push_back("  ");
+	// parallelFuncs[0].header.push_back("  if( data->tid == 2 )");
+	// parallelFuncs[0].header.push_back("		printf( \"   Thread %d does things differently\\n\", data->tid );");
+	// parallelFuncs[0].header.push_back("  ");
+	// parallelFuncs[0].header.push_back("  pthread_exit(NULL);");
+	// parallelFuncs[0].header.push_back("}");
+	// parallelFuncs[0].header.push_back("");
+
+	// parallelFuncs[1].name = "parfor";
+	// parallelFuncs[1].collection.push_back("  pthread_t thr[NUM_THREADS];");
+	// parallelFuncs[1].collection.push_back("  int z, rc;");
+	// parallelFuncs[1].collection.push_back("  thread_data_t thr_data[NUM_THREADS];");
+	// parallelFuncs[1].collection.push_back("  ");
+	// parallelFuncs[1].collection.push_back("  for (z = 0; z < NUM_THREADS; ++z) {");
+	// parallelFuncs[1].collection.push_back("    thr_data[z].tid = z;");	
+	// parallelFuncs[1].collection.push_back("    if ((rc = pthread_create(&thr[z], NULL, do_work, &thr_data[z]))) {");
+	// parallelFuncs[1].collection.push_back("      fprintf(stderr, \"error: pthread_create, rc: %d\\n\", rc);");
+	// parallelFuncs[1].collection.push_back("      return EXIT_FAILURE;");
+	// parallelFuncs[1].collection.push_back("    }");
+	// parallelFuncs[1].collection.push_back("  }");
+	// parallelFuncs[1].collection.push_back("  for (z = 0; z < NUM_THREADS; ++z) {");
+	// parallelFuncs[1].collection.push_back("    pthread_join(thr[z], NULL);");
+	// parallelFuncs[1].collection.push_back("  }");
+	// parallelFuncs[1].collection.push_back(" ");
+	// //parallelFuncs[0].header.push_back("#define NUM_THREADS ");
+	// parallelFuncs[1].header.push_back("#define SIZE 16");
+	// parallelFuncs[1].header.push_back(" ");
+	// parallelFuncs[1].header.push_back("typedef struct _thread_data_t {");
+	// parallelFuncs[1].header.push_back("  int tid;");
+	// parallelFuncs[1].header.push_back("} thread_data_t;");
+	// parallelFuncs[1].header.push_back(" ");
+	// parallelFuncs[1].header.push_back("void *do_work(void *arg) {");
+	// parallelFuncs[1].header.push_back("  thread_data_t *data = (thread_data_t *)arg;");
+	// parallelFuncs[1].header.push_back("  ");
+	// parallelFuncs[1].header.push_back(" int tid = data->tid;");
+	// parallelFuncs[1].header.push_back(" int chunk_size = (SIZE / NUM_THREADS); ");
+	// parallelFuncs[1].header.push_back(" int start = tid * chunk_size; ");
+	// parallelFuncs[1].header.push_back(" int end = start + chunk_size;");
+	// parallelFuncs[1].header.push_back("  ");
+	// parallelFuncs[1].header.push_back(" for(int i = start; i < end; i++) printf( \"Thread %d executes loop iteration %d\\n\", tid, i );;");
+	// parallelFuncs[1].header.push_back("  ");
+	// parallelFuncs[1].header.push_back("  pthread_exit(NULL);");
+	// parallelFuncs[1].header.push_back("}");
+	// parallelFuncs[1].header.push_back("");
+
+	// parallelFuncs[2].name = "critical";
+	// parallelFuncs[2].collection.push_back("  pthread_t thr[NUM_THREADS];");
+	// parallelFuncs[2].collection.push_back("  int z, rc;");
+	// parallelFuncs[2].collection.push_back("  thread_data_t thr_data[NUM_THREADS];");
+	// parallelFuncs[2].collection.push_back("  ");
+	// parallelFuncs[2].collection.push_back("  for (z = 0; z < NUM_THREADS; ++z) {");
+	// parallelFuncs[2].collection.push_back("    thr_data[z].tid = z;");	
+	// parallelFuncs[2].collection.push_back("    if ((rc = pthread_create(&thr[z], NULL, do_work, &thr_data[z]))) {");
+	// parallelFuncs[2].collection.push_back("      fprintf(stderr, \"error: pthread_create, rc: %d\\n\", rc);");
+	// parallelFuncs[2].collection.push_back("      return EXIT_FAILURE;");
+	// parallelFuncs[2].collection.push_back("    }");
+	// parallelFuncs[2].collection.push_back("  }");
+	// parallelFuncs[2].collection.push_back("  for (z = 0; z < NUM_THREADS; ++z) {");
+	// parallelFuncs[2].collection.push_back("    pthread_join(thr[z], NULL);");
+	// parallelFuncs[2].collection.push_back("  }");
+	// parallelFuncs[2].collection.push_back(" ");
+	// //parallelFuncs[0].header.push_back("#define NUM_THREADS ");
+	// parallelFuncs[2].header.push_back("pthread_mutex_t var=PTHREAD_MUTEX_INITIALIZER;");
+	// parallelFuncs[2].header.push_back("int sum, a[5];");
+	// parallelFuncs[2].header.push_back(" ");
+	// parallelFuncs[2].header.push_back(" ");
+	// parallelFuncs[2].header.push_back("typedef struct _thread_data_t {");
+	// parallelFuncs[2].header.push_back("  int tid;");
+	// parallelFuncs[2].header.push_back("} thread_data_t;");
+	// parallelFuncs[2].header.push_back(" ");
+	// parallelFuncs[2].header.push_back("void *do_work(void *arg) {");
+	// parallelFuncs[2].header.push_back("  thread_data_t *data = (thread_data_t *)arg;");
+	// parallelFuncs[2].header.push_back("  ");
+	// parallelFuncs[2].header.push_back(" int tid = data->tid;");
+	// parallelFuncs[2].header.push_back(" int chunk_size = (SIZE / NUM_THREADS); ");
+	// parallelFuncs[2].header.push_back(" int start = tid * chunk_size; ");
+	// parallelFuncs[2].header.push_back(" int end = start + chunk_size;");
+	// parallelFuncs[2].header.push_back("  ");
+	// parallelFuncs[2].header.push_back(" for(int i = start; i < end; i++) printf( \"Thread %d executes loop iteration %d\\n\", tid, i );;");
+	// parallelFuncs[2].header.push_back("  ");
+	// parallelFuncs[2].header.push_back("  pthread_exit(NULL);");
+	// parallelFuncs[2].header.push_back("}");
+	// parallelFuncs[2].header.push_back("");
 
 
 	DEBUG_PRINT("ALL LOADED@!!@");
@@ -242,6 +260,12 @@ void load(implementation *parallelFuncs) {
 }
 
 void parseHeader(ifstream& file, vector<string>& header) {
+	/*
+		Parses all #include statements and adds them to the
+		the new program header. It will also replace the 
+		<omp.h> header with a <pthread.h> header.
+	*/
+
 	string line;
 
 	std::getline (file,line);
@@ -494,8 +518,8 @@ void parseProgram (ifstream& in_stream, vector<string>& header, vector<string>& 
 }
 
 int main (int argc, char *argv[]) {	
-	vector<string> header;
-	vector<string> list;
+	//vector<string> header;
+	//vector<string> list;
 	string programName;
 
 	load(parallelFuncs);
