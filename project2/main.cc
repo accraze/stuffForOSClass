@@ -318,7 +318,44 @@ void _convertClauses(string line, vector<string>& header){
 	//addNumThreads(line, header);
 }
 
-void _checkPrivateClause(stringline){
+void _checkPrivateClause(string line){
+	int check = line.find("private(");
+	
+	if(check != std::string::npos){
+		string list = line.substr(check, line.length());
+		char privateList[list.size()+1];//as 1 char space for null is also required
+		strcpy(privateList, myWord.c_str());
+
+		vector<char> variables;
+		parseVariableList(privateList, variables);
+
+		addPrivateVariables(variables);
+		
+	}
+
+}
+
+void addPrivateVariables(vector<char>& variables){
+	/*
+		Adds all private variables to the pThreadStruct
+	*/
+
+	for( std::vector<string>::const_iterator i = variables.begin(); i != variables.end(); ++i)
+		 	string line = "int ";
+		 	line += *i;
+		 	line += ";\n";
+		 	pthreadStruct.push_back(line);
+	 }
+}
+
+void parseVariableList(char *list, vector<char>& variables){
+		int i = 0;
+		
+		while(privateList[i] != ")"){
+			if(privateList[i] != ","){
+				variables.push_back(privateList[i]);
+			}
+		}
 
 }
 
@@ -428,7 +465,7 @@ void parseProgram (ifstream& in_stream, vector<string>& header, vector<string>& 
 			_convertClauses(line);
 			//_convertDirective(directive, header, list, parallelFuncs);
 			
-			skipInputLines(in_stream, list);
+			//skipInputLines(in_stream, list);
 		} 
 		else {
 			//bool hasConverted = _convertThreadIdentifiers(line, list);
