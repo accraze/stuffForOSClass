@@ -23,25 +23,24 @@ vector<string> variableList;
 
 void DEBUG_PRINT (string line);
 void DEBUG_VECTOR(vector<string>& dict);
-void DEBUG_ARRAY(implementation *dict);
-void _addPThreadCodeToNewCode(string name, vector<string>& list, vector<string>& header);
+//void DEBUG_ARRAY(implementation *dict);
+//void _addPThreadCodeToNewCode(string name, vector<string>& list, vector<string>& header);
 void loadVector(vector<string>& source, vector<string>& target);
 void saveProcessedProgram(vector<string>& header, vector<string>& list, string programName);
 //void skipInputLines(ifstream& file, vector<string>& list);
-void parseHeader(ifstream& file, vector<string>& header);
+void parseHeader(ifstream& file);
 void load();
 string checkForDirective (string line);
 string getNumThreads(string directive);
 void addNumThreads(string inputLine, vector<string>& header);
-void removeOmpRefs (vector<string>& functionsList);
 void parseProgram (ifstream& in_stream, vector<string>& header, vector<string>& list);
 bool replace(std::string& str, const std::string& from, const std::string& to);
 void _checkNumThreads(string line, vector<string>& header);
-bool _convertThreadIdentifiers(string line, vector<string>& list);
-void _convertDirective(string resultName,vector<string>& header, vector<string>& list, implementation *dict);
+bool _convertThreadIdentifiers(string line);
+void _convertDirective(string resultName,vector<string>& header, vector<string>& list);
 void closeStruct();
 void closeWorkFunc();
-void _buildParCode (ifstream& file)
+void _buildParCode (ifstream& file);
 
 
  //**************************//
@@ -63,15 +62,15 @@ void DEBUG_VECTOR(vector<string>& dict) {
 	 	}
 }
 
-void DEBUG_ARRAY(implementation *dict){
-	for(int i = 0; i < NUM_PFUNC; i++) {
-		DEBUG_PRINT("HEADER");
-		DEBUG_VECTOR(dict[i].header);
-		DEBUG_PRINT("LIST");
-		DEBUG_VECTOR(dict[i].collection);
+// void DEBUG_ARRAY(implementation *dict){
+// 	for(int i = 0; i < NUM_PFUNC; i++) {
+// 		DEBUG_PRINT("HEADER");
+// 		DEBUG_VECTOR(dict[i].header);
+// 		DEBUG_PRINT("LIST");
+// 		DEBUG_VECTOR(dict[i].collection);
 
-	}
-}
+// 	}
+// }
 
 string checkForDirective (string line) {
 
@@ -176,7 +175,7 @@ void load() {
 	//DEBUG_ARRAY(parallelFuncs);
 }
 
-void parseHeader(ifstream& file, vector<string>& header) {
+void parseHeader(ifstream& file) {
 	/*
 		Parses all #include statements and adds them to the
 		the new program header. It will also replace the 
@@ -197,30 +196,6 @@ void parseHeader(ifstream& file, vector<string>& header) {
 		}
 
 		header.push_back(line);
-	}
-}
-
-void skipInputLines(ifstream& file, vector<string>& list) {
-	string line;
-
-	std::getline(file, line);
-
-	if(line == "{") {
-		
-		while(line != "}") {
-			std::getline(file, line);
-		}
-	} else {
-
-		while(line == "	return(0);"){
-			std::getline(file, line);
-			DEBUG_PRINT(line);
-			if (line == "	return(0);")
-			{
-				list.push_back(line);
-				break;
-			}
-		}
 	}
 }
 
@@ -248,7 +223,7 @@ void saveProcessedProgram(string programName) {
     //write the program header to file
     copy(header.begin(), header.end(), output_iterator);
     //write the program functions to file
-    copy(pThreadStruct.begin(), pThreadStruct.end(), output_iterator);
+    copy(pthreadStruct.begin(), pthreadStruct.end(), output_iterator);
     copy(workFunc.begin(), workFunc.end(), output_iterator);
     copy(mainFunc.begin(), mainFunc.end(), output_iterator);
 }
@@ -278,29 +253,32 @@ string getProgramName(string fileName) {
 	return programName;
 }
 
-void _addPThreadCodeToNewCode(string name, vector<string>& list,vector<string>& header, implementation *dict) {
+// void _addPThreadCodeToNewCode(string name, vector<string>& list,vector<string>& header, implementation *dict) {
 	
 
-	for(int i = 0; i < NUM_PFUNC; i++) {
-		if(dict[i].name == name) {
+// 	for(int i = 0; i < NUM_PFUNC; i++) {
+// 		if(dict[i].name == name) {
 			
-			loadVector(dict[i].header, header);
-			loadVector(dict[i].collection, list);
-		}
-	}
-}
+// 			loadVector(dict[i].header, header);
+// 			loadVector(dict[i].collection, list);
+// 		}
+// 	}
+// }
 
 void _buildParCode (ifstream& file){
 	string line;
 
-	std::getline (in_stream,line);
+	std::getline (file,line);
 	int check = line.find("return(0)");
 
 	while(check == std::string::npos){
-		_convertThreadIdentifiers(line)
-		workFunc.push_back(line);
+		bool hasConverted = _convertThreadIdentifiers(line);
+		
+		if(!hasConverted){
+			workFunc.push_back(line);	
+		}
 
-		std::getline (in_stream,line);
+		std::getline (file,line);
 		
 		check = line.find("return(0)");
 	}
@@ -313,7 +291,7 @@ void _convertDirective(string resultName, ifstream& file) {
  	*/
 
 	if(resultName == "par") {
-		printf("par!!\n");
+		DEBUG_PRINT("par!!\n");
 		_buildParCode(file);
 	}
 	else if(resultName == "parFor"){
@@ -388,7 +366,7 @@ void _checkNumThreads(string line, vector<string>& header) {
 	}
 }
 
-bool _convertThreadIdentifiers(string line, vector<string>& list){
+bool _convertThreadIdentifiers(string line){
 	/* 
 		This function looks for all calls to the
 	 	openmp_get_thread_num runtime library and
@@ -400,7 +378,7 @@ bool _convertThreadIdentifiers(string line, vector<string>& list){
 	if(check != std::string::npos){
 		replace(line, "omp_get_thread_num()", "data->id");
 		
-		list.push_back(line);
+		workFunc.push_back(line);
 		
 		return true;
 	}
@@ -502,10 +480,10 @@ void parseProgram (ifstream& in_stream){
 			_convertDirective(directive, in_stream);
 		} 
 		else {
-			bool hasConverted = _convertThreadIdentifiers(line, list);
+			bool hasConverted = _convertThreadIdentifiers(line);
 			
 			if(!hasConverted){
-				list.push_back(line);
+				workFunc.push_back(line);
 			}
 		}	
 	}
@@ -526,9 +504,9 @@ int main (int argc, char *argv[]) {
 	string result;
 	
 	//in_stream.open(argv[1]);
-	programName = getProgramName("INPUT/parfor.cc");
+	programName = getProgramName("INPUT/par.cc");
 	
-	in_stream.open("INPUT/parfor.cc");
+	in_stream.open("INPUT/par.cc");
 
 	printf("Processing OpenMP program....\n");
 	
