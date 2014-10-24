@@ -290,7 +290,7 @@ void addNumSize(string num) {
 	// the openMP program and puts it in the workFunc
 	// of the Pthreads implementation.
 
-	string line = "#define NUM_THREADS ";
+	string line = "#define SIZE ";
 	line += num;
 
 	header.push_back(line);
@@ -303,8 +303,9 @@ void getForLoopSize(ifstream& file){
 	std::getline (file,line);
 	int check = line.find("<");
 	if(check != std::string::npos){
-		string num = line.substr(check, line.find(";"));
-		addNumSize(num);
+		string num = line.substr(check + 1, line.find(")"));
+		string numFix = num.substr(0, num.find(";"));
+		addNumSize(numFix);
 	}
 }
 
