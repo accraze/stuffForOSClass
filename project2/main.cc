@@ -26,21 +26,22 @@ void DEBUG_VECTOR(vector<string>& dict);
 //void DEBUG_ARRAY(implementation *dict);
 //void _addPThreadCodeToNewCode(string name, vector<string>& list, vector<string>& header);
 void loadVector(vector<string>& source, vector<string>& target);
-void saveProcessedProgram(vector<string>& header, vector<string>& list, string programName);
+void saveProcessedProgram(string programName);
 //void skipInputLines(ifstream& file, vector<string>& list);
 void parseHeader(ifstream& file);
 void load();
 string checkForDirective (string line);
 string getNumThreads(string directive);
-void addNumThreads(string inputLine, vector<string>& header);
-void parseProgram (ifstream& in_stream, vector<string>& header, vector<string>& list);
+void addNumThreads(string line);
+void parseProgram (ifstream& in_stream);
 bool replace(std::string& str, const std::string& from, const std::string& to);
-void _checkNumThreads(string line, vector<string>& header);
+void _checkNumThreads(string line);
 bool _convertThreadIdentifiers(string line);
-void _convertDirective(string resultName,vector<string>& header, vector<string>& list);
+void _convertDirective(string resultName);
 void closeStruct();
 void closeWorkFunc();
 void _buildParCode (ifstream& file);
+bool checkForFunction(string line);
 
 
  //**************************//
@@ -81,7 +82,6 @@ string checkForDirective (string line) {
 
 	check = line.find("#pragma omp parallel ");
 	if(check != std::string::npos) {
-		addNumThreads(line, header);
 		return "par";
 	}
 
@@ -89,7 +89,7 @@ string checkForDirective (string line) {
 	return "null";
 }
 
-void addNumThreads(string inputLine, vector<string>& header) {
+void addNumThreads(string inputLine) {
 	// This method gets the number of threads from
 	// the openMP program and puts it in the header
 	// of the Pthreads implementation.
@@ -100,6 +100,7 @@ void addNumThreads(string inputLine, vector<string>& header) {
 	line += num;
 
 	header.push_back(line);
+	header.push_back("");
 }
 
 string getNumThreads(string directive) {
@@ -131,9 +132,9 @@ void closeStruct(){
 }
 
 void closeWorkFunc(){
-	pthreadStruct.push_back("} thread_data_t;");
-	pthreadStruct.push_back("}");
-	pthreadStruct.push_back("");
+	workFunc.push_back("  pthread_exit(NULL);");
+	workFunc.push_back("}");
+	workFunc.push_back("");
 
 }
 
@@ -148,7 +149,6 @@ void load() {
 	pthreadStruct.push_back("  int tid;");
 
 	workFunc.push_back("void *do_work(void *arg) {");
-	workFunc.push_back("void *do_work(void *arg) {");
 	workFunc.push_back("  thread_data_t *data = (thread_data_t *)arg;");
 
 	mainFunc.push_back("int main(int argc, char **argv) {");
@@ -156,16 +156,16 @@ void load() {
 	mainFunc.push_back("  int z, rc;");
 	mainFunc.push_back("  thread_data_t thr_data[NUM_THREADS];");
 	mainFunc.push_back("");
-	mainFunc.push_back(" for (z = 0; z < NUM_THREADS; ++z) {");
-	mainFunc.push_back("    thr_data[i].tid = i;");
-	mainFunc.push_back("    if ((rc = pthread_create(&thr[i], NULL, do_work, &thr_data[i]))) {");
-	mainFunc.push_back("      fprintf(stderr, \"error: pthread_create, rc: %d\n\", rc);");
+	mainFunc.push_back("  for (z = 0; z < NUM_THREADS; ++z) {");
+	mainFunc.push_back("    thr_data[z].tid = z;");
+	mainFunc.push_back("    if ((rc = pthread_create(&thr[z], NULL, do_work, &thr_data[z]))) {");
+	mainFunc.push_back("      fprintf(stderr, \"error: pthread_create, rc: %d\\n\", rc);");
 	mainFunc.push_back("      return EXIT_FAILURE;");
 	mainFunc.push_back("    }");
 	mainFunc.push_back("  }");
 	mainFunc.push_back("");
-	mainFunc.push_back("  for (i = 0; i < NUM_THREADS; ++i) {");
-	mainFunc.push_back("    pthread_join(thr[i], NULL);");
+	mainFunc.push_back("  for (z = 0; z < NUM_THREADS; ++z) {");
+	mainFunc.push_back("    pthread_join(thr[z], NULL);");
 	mainFunc.push_back("  }");
 	mainFunc.push_back("");
 	mainFunc.push_back("  return EXIT_SUCCESS;");
@@ -269,17 +269,21 @@ void _buildParCode (ifstream& file){
 	string line;
 
 	std::getline (file,line);
+	std::getline (file,line);
+
 	int check = line.find("return(0)");
 
 	while(check == std::string::npos){
-		bool hasConverted = _convertThreadIdentifiers(line);
-		
-		if(!hasConverted){
-			workFunc.push_back(line);	
+		if(line!= "}"){
+			bool hasConverted = _convertThreadIdentifiers(line);
+			
+			if(!hasConverted){
+				workFunc.push_back(line);	
+			}
 		}
-
-		std::getline (file,line);
 		
+		std::getline (file,line);
+			
 		check = line.find("return(0)");
 	}
 }
@@ -352,7 +356,7 @@ void _convertDirective(string resultName, ifstream& file) {
 
 // }
 
-void _checkNumThreads(string line, vector<string>& header) {
+void _checkNumThreads(string line) {
 	/* 
 		Checks to see if the num_threads clauses is contained
 		in the file line. If it is, then the number is parsed
@@ -362,7 +366,7 @@ void _checkNumThreads(string line, vector<string>& header) {
 	int check = line.find("num_threads");
 
 	if(check != std::string::npos){
-		addNumThreads(line, header);
+		addNumThreads(line);
 	}
 }
 
@@ -376,7 +380,7 @@ bool _convertThreadIdentifiers(string line){
 	int check = line.find("omp_get_thread_num()");
 
 	if(check != std::string::npos){
-		replace(line, "omp_get_thread_num()", "data->id");
+		replace(line, "omp_get_thread_num()", "data->tid");
 		
 		workFunc.push_back(line);
 		
@@ -441,17 +445,29 @@ void _convertClauses(string line){
 		new program.
 	*/
 
-	_checkNumThreads(line, header);
+	_checkNumThreads(line);
 	//_checkPrivateClause(line, header);
 	//_checkShared(line, header);
 
-	// int check = line.find("omp_get_thread_num()");
+}
 
-	// if(check != std::string::npos){
-	// 	replace(line, "omp_get_thread_num()", "data->id");
-	// }
+bool checkForFunction(string line){
+	int check = line.find("int main(");
+	int check2 = line.find("{");
+	int check3 = line.find("}");
 
-	//addNumThreads(line, header);
+	if(check != std::string::npos){
+		return true;
+	}
+
+	if(check2 != std::string::npos){
+		return true;
+	}
+
+	if(check3 != std::string::npos){
+		return true;
+	}
+	return false;
 }
 
 void parseProgram (ifstream& in_stream){
@@ -465,25 +481,36 @@ void parseProgram (ifstream& in_stream){
 	string line;
 	string directive;
 
+	//read in Main and open bracket
+	// std::getline (in_stream,line);
+	// std::getline (in_stream,line);
+
 	while(!in_stream.eof())
 	{
 		std::getline (in_stream,line);
-		//check for variable instant
-		checkForVariables(line);
+		//check for function names and brackets
+		bool isFunction = checkForFunction(line);
 
-		//check line for directives
-		directive = checkForDirective(line);
-		
-		if (directive != "null") {
+		if(!isFunction){
+
+			//check for variable instant
+			checkForVariables(line);
+
+			//check line for directives
+			directive = checkForDirective(line);
 			
-			_convertClauses(line);
-			_convertDirective(directive, in_stream);
-		} 
-		else {
-			bool hasConverted = _convertThreadIdentifiers(line);
-			
-			if(!hasConverted){
-				workFunc.push_back(line);
+			if (directive != "null") {
+				
+				_convertClauses(line);
+				_convertDirective(directive, in_stream);
+
+			} 
+			else {
+				bool hasConverted = _convertThreadIdentifiers(line);
+				
+				if(!hasConverted){
+					workFunc.push_back(line);
+				}
 			}
 		}	
 	}
