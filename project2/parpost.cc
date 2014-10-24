@@ -2,7 +2,7 @@
 #include	<stdlib.h>
 #include 	<pthread.h>
 
-#define NUM_THREADS 16
+#define NUM_THREADS 4
 
 typedef struct _thread_data_t {
   int tid;
@@ -10,11 +10,12 @@ typedef struct _thread_data_t {
 
 void *do_work(void *arg) {
   thread_data_t *data = (thread_data_t *)arg;
+	int i, n;
 
-	printf( "The parallel region is executed by thread %d\n", data->tid );
+	for( i = 0; i < 16; i++ )
+		printf( "Thread %d executes loop iteration %d\n", data->tid, i );
 
-	if( data->tid == 2 )
-		printf( "   Thread %d does things differently\n", data->tid );
+	return(0);
 
   pthread_exit(NULL);
 }

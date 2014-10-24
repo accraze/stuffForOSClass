@@ -253,22 +253,66 @@ string getProgramName(string fileName) {
 	return programName;
 }
 
-// void _addPThreadCodeToNewCode(string name, vector<string>& list,vector<string>& header, implementation *dict) {
-	
-
-// 	for(int i = 0; i < NUM_PFUNC; i++) {
-// 		if(dict[i].name == name) {
-			
-// 			loadVector(dict[i].header, header);
-// 			loadVector(dict[i].collection, list);
-// 		}
-// 	}
-// }
-
 void _buildParCode (ifstream& file){
 	string line;
 
 	std::getline (file,line);
+	std::getline (file,line);
+
+	int check = line.find("return(0)");
+
+	while(check == std::string::npos){
+		if(line!= "}"){
+			bool hasConverted = _convertThreadIdentifiers(line);
+			
+			if(!hasConverted){
+				workFunc.push_back(line);	
+			}
+		}
+		
+		std::getline (file,line);
+			
+		check = line.find("return(0)");
+	}
+}
+void _loadParforTemplate (){
+	workFunc.push_back("  int tid = data->tid; ");
+	workFunc.push_back("  int chunk_size = (SIZE / NUM_THREADS); ");
+	workFunc.push_back("  int start = tid * chunk_size; ");
+	workFunc.push_back("  int end = start + chunk_size;");
+	workFunc.push_back("");
+	workFunc.push_back("  for(int i = start; i < end; i++)");
+
+}
+
+void addNumSize(string num) {
+	// This method gets the size of for loop from
+	// the openMP program and puts it in the workFunc
+	// of the Pthreads implementation.
+
+	string line = "#define NUM_THREADS ";
+	line += num;
+
+	header.push_back(line);
+	header.push_back("");
+}
+
+void getForLoopSize(ifstream& file){
+	string line;
+	
+	std::getline (file,line);
+	int check = line.find("<");
+	if(check != std::string::npos){
+		string num = line.substr(check, line.find(";"));
+		addNumSize(num);
+	}
+}
+
+void _buildParForCode(ifstream& file){
+	string line;
+	_loadParforTemplate();
+	getForLoopSize(file);
+
 	std::getline (file,line);
 
 	int check = line.find("return(0)");
@@ -295,11 +339,12 @@ void _convertDirective(string resultName, ifstream& file) {
  	*/
 
 	if(resultName == "par") {
-		DEBUG_PRINT("par!!\n");
+		printf("par!!\n");
 		_buildParCode(file);
 	}
-	else if(resultName == "parFor"){
+	else if(resultName == "parfor"){
 		printf("Parfor!!\n");
+		_buildParForCode(file);
 	}
 	else if(resultName == "critical") {
 		printf("Critical!!\n");
@@ -407,7 +452,7 @@ void checkForVariables(string line) {
 
 		variableList.push_back(list);
 
-		DEBUG_PRINT(list);	
+		//DEBUG_PRINT(list);	
 
 		// check  = line.find(",");
 		
@@ -531,9 +576,9 @@ int main (int argc, char *argv[]) {
 	string result;
 	
 	//in_stream.open(argv[1]);
-	programName = getProgramName("INPUT/par.cc");
+	programName = getProgramName("INPUT/parfor.cc");
 	
-	in_stream.open("INPUT/par.cc");
+	in_stream.open("INPUT/parfor.cc");
 
 	printf("Processing OpenMP program....\n");
 	
