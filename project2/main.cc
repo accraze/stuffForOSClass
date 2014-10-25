@@ -358,49 +358,49 @@ void _convertDirective(string resultName, ifstream& file) {
 	}
 }
 
+void addPrivateVariables(vector<char>& variables){
+	/*
+		Adds all private variables to the pThreadStruct
+	*/
+		string line;
 
+	for(std::vector<char>::const_iterator i = variables.begin(); i != variables.end(); ++i) {
+		 	line = "int ";
+		 	line += *i;
+		 	line += ";\n";
+		 	pthreadStruct.push_back(line);
+	 }
+}
 
+void parseVariableList(char *privateList, vector<char>& variables){
+		int i = 0;
+		
+		while(privateList[i] != ')'){
+			if(privateList[i] != ','){
+				variables.push_back(privateList[i]);
+			}
 
-// void _checkPrivateClause(string line){
-// 	int check = line.find("private(");
+			i++;
+		}
+
+}
+
+void _checkPrivateClause(string line){
+	int check = line.find("private(");
 	
-// 	if(check != std::string::npos){
-// 		string list = line.substr(check, line.length());
-// 		char privateList[list.size()+1];//as 1 char space for null is also required
-// 		strcpy(privateList, myWord.c_str());
+	if(check != std::string::npos){
+		string list = line.substr(check, line.length());
+		char privateList[list.size()+1];//as 1 char space for null is also required
+		strcpy(privateList, list.c_str());
 
-// 		vector<char> variables;
-// 		parseVariableList(privateList, variables);
+		vector<char> variables;
+		parseVariableList(privateList, variables);
 
-// 		addPrivateVariables(variables);
+		addPrivateVariables(variables);
 		
-// 	}
+	}
 
-// }
-
-// void addPrivateVariables(vector<char>& variables){
-// 	/*
-// 		Adds all private variables to the pThreadStruct
-// 	*/
-
-// 	for( std::vector<string>::const_iterator i = variables.begin(); i != variables.end(); ++i)
-// 		 	string line = "int ";
-// 		 	line += *i;
-// 		 	line += ";\n";
-// 		 	pthreadStruct.push_back(line);
-// 	 }
-// }
-
-// void parseVariableList(char *list, vector<char>& variables){
-// 		int i = 0;
-		
-// 		while(privateList[i] != ")"){
-// 			if(privateList[i] != ","){
-// 				variables.push_back(privateList[i]);
-// 			}
-// 		}
-
-// }
+}
 
 void _checkNumThreads(string line) {
 	/* 
@@ -492,7 +492,7 @@ void _convertClauses(string line){
 	*/
 
 	_checkNumThreads(line);
-	//_checkPrivateClause(line, header);
+	_checkPrivateClause(line);
 	//_checkShared(line, header);
 
 }
@@ -577,9 +577,9 @@ int main (int argc, char *argv[]) {
 	string result;
 	
 	//in_stream.open(argv[1]);
-	programName = getProgramName("INPUT/parfor.cc");
+	programName = getProgramName("INPUT/critical.cc");
 	
-	in_stream.open("INPUT/parfor.cc");
+	in_stream.open("INPUT/critical.cc");
 
 	printf("Processing OpenMP program....\n");
 	
