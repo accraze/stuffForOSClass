@@ -15,7 +15,8 @@ vector<string> pthreadStruct;
 vector<string> workFunc;
 vector<string> mainFunc;
 
-vector<string> variableList;
+vector<string> privateVariableList;
+
 
 //************************ //
 //      Declarations      //
@@ -42,6 +43,10 @@ void closeStruct();
 void closeWorkFunc();
 void _buildParCode (ifstream& file);
 bool checkForFunction(string line);
+bool isPrivate(string variable);
+void _readDirectiveProgram (ifstream& file);
+
+
 
 
  //**************************//
@@ -313,7 +318,11 @@ void _buildParForCode(ifstream& file){
 	string line;
 	_loadParforTemplate();
 	getForLoopSize(file);
+	_readDirectiveProgram(file);
+}
 
+void _readDirectiveProgram (ifstream& file){
+	string line;
 	std::getline (file,line);
 
 	int check = line.find("return(0)");
@@ -359,9 +368,9 @@ void _convertDirective(string resultName, ifstream& file) {
 }
 
 void addPrivateVariables(string variable){
-/*
-	Adds all private variables to the pThreadStruct
-*/
+	/*
+		Adds all private variables to the pThreadStruct
+	*/
 	string line;
 
  	line = "  int ";
@@ -373,25 +382,13 @@ void addPrivateVariables(string variable){
 void parseVariableList(string list){
 	int i = 0;
 
-		// DEBUG_PRINT("HERE!!");
-		// DEBUG_PRINT(list);
-	
-	// while(list[i] != ')'){
-	// 	while(list[i]& != ")"){
-	// 		i++;
-	// 	}
 
-		string variable = list.substr(0, list.find(")"));
+	string variable = list.substr(0, list.find(")"));
 
-		//variables.push_back(variable);
-		addPrivateVariables(variable);
-		DEBUG_PRINT("HERE!!");
-		DEBUG_PRINT(variable);
-
-	// 	if(list[i] != ')'){
-	// 		i++;
-	// 	}
-	// }
+	//variables.push_back(variable);
+	addPrivateVariables(variable);
+	DEBUG_PRINT("HERE!!");
+	DEBUG_PRINT(variable);
 
 }
 
@@ -463,7 +460,7 @@ void checkForVariables(string line) {
 	if (check != std::string::npos){
 		string list = line.substr(check, line.length()); //get rid of int type
 
-		variableList.push_back(list);
+		//variableList.push_back(list);
 
 		//DEBUG_PRINT(list);	
 
@@ -598,9 +595,6 @@ int main (int argc, char *argv[]) {
 	parseHeader(in_stream);
 	
 	parseProgram(in_stream);
-
-	//DEBUG_VECTOR(header);
-	//DEBUG_VECTOR(list);
 
 	printf("Writing processed pthread program to file....\n");
 	
