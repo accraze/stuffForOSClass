@@ -19,7 +19,6 @@ void *do_work(void *arg) {
 
 	sum = 0;
 
-	local_sum = 0;
 
 	#pragma omp for 
 	for( i = 0; i < 5; i++ )

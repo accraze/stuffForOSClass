@@ -25,10 +25,8 @@ vector<string> privateVariableList;
 void DEBUG_PRINT (string line);
 void DEBUG_VECTOR(vector<string>& dict);
 //void DEBUG_ARRAY(implementation *dict);
-//void _addPThreadCodeToNewCode(string name, vector<string>& list, vector<string>& header);
 void loadVector(vector<string>& source, vector<string>& target);
 void saveProcessedProgram(string programName);
-//void skipInputLines(ifstream& file, vector<string>& list);
 void parseHeader(ifstream& file);
 void load();
 string checkForDirective (string line);
@@ -67,16 +65,6 @@ void DEBUG_VECTOR(vector<string>& dict) {
 		 	std::cout << *i << ' ' << endl;
 	 	}
 }
-
-// void DEBUG_ARRAY(implementation *dict){
-// 	for(int i = 0; i < NUM_PFUNC; i++) {
-// 		DEBUG_PRINT("HEADER");
-// 		DEBUG_VECTOR(dict[i].header);
-// 		DEBUG_PRINT("LIST");
-// 		DEBUG_VECTOR(dict[i].collection);
-
-// 	}
-// }
 
 string checkForDirective (string line) {
 
@@ -264,21 +252,7 @@ void _buildParCode (ifstream& file){
 	std::getline (file,line);
 	std::getline (file,line);
 
-	int check = line.find("return(0)");
-
-	while(check == std::string::npos){
-		if(line!= "}"){
-			bool hasConverted = _convertThreadIdentifiers(line);
-			
-			if(!hasConverted){
-				workFunc.push_back(line);	
-			}
-		}
-		
-		std::getline (file,line);
-			
-		check = line.find("return(0)");
-	}
+	_readDirectiveProgram(file);
 }
 void _loadParforTemplate (){
 	workFunc.push_back("  int tid = data->tid; ");
@@ -385,7 +359,6 @@ void parseVariableList(string list){
 
 	string variable = list.substr(0, list.find(")"));
 
-	//variables.push_back(variable);
 	addPrivateVariables(variable);
 	DEBUG_PRINT("HERE!!");
 	DEBUG_PRINT(variable);
@@ -397,15 +370,7 @@ void _checkPrivateClause(string line){
 	
 	if(check != std::string::npos){
 		string list = line.substr(check + 8, line.length());
-		//DEBUG_PRINT("HERE!!!!!");
-		//DEBUG_PRINT(list);
-		//char privateList[list.size()+1];//as 1 char space for null is also required
-		//strcpy(privateList, list.c_str());
-
-		//vector<char> variables;
 		parseVariableList(list);
-
-		//addPrivateVariables(variables);
 		
 	}
 
@@ -455,41 +420,15 @@ bool replace(std::string& str, const std::string& from, const std::string& to) {
     return true;
 }
 
-void checkForVariables(string line) {
+bool checkForVariables(string line) {
 	int check  = line.find("int ");
 	if (check != std::string::npos){
-		string list = line.substr(check, line.length()); //get rid of int type
+		string list = line.substr(check, line.length());
+		return true;
 
-		//variableList.push_back(list);
 
-		//DEBUG_PRINT(list);	
-
-		// check  = line.find(",");
-		
-		// if(check != std::string::npos){
-			
-		// 	while(check != std::string::npos) {
-		// 		string var = line.substr(0, check); //get rid of int type
-				
-		// 		variableList.push_back(var);
-				
-		// 		string list = line.substr(check, line.length()); //get rid of int type
-			
-		// 		check  = line.find(",");
-		// 	}
-		// }
-		// else {
-		// 	string noInt = line.substr(check, line.length());
-			
-		// 	string var = noInt.substr(0, noInt.length() - 1);
-
-		// 	DEBUG_PRINT(var);
-			
-		// 	variableList.push_back(var);	
-		// }
-		
-		
 	}
+	return false;
 }
 
 void _convertClauses(string line){
