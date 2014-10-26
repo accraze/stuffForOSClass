@@ -296,17 +296,35 @@ void _buildParForCode(ifstream& file){
 	_readDirectiveProgram(file);
 }
 
-void _readDirectiveProgram (ifstream& file){
+void _checkIfPrivate(string line){
+	//iterate through all private variables
+	for( std::vector<string>::const_iterator i = privateVariableList.begin(); i != privateVariableList.end(); ++i){
+		int check = line.find(*i);
+
+		if(check != std::string::npos){
+			DEBUG_PRINT("FOUND A PRIVATE!!!");
+			replace(line, *i, "");
+			
+			workFunc.push_back(line);
+		}
+	}
+}
+
+void _readDirectiveProgram (ifstream& file) {
 	string line;
 	std::getline (file,line);
 
 	int check = line.find("return(0)");
 
 	while(check == std::string::npos){
-		bool isVar = checkForVariables(line);
+		bool isVar ;
+		isVar = checkForVariables(line);
+		printf("isVar: %s", isVar ? "true" : "false");
 
-		if(isVar){
-			//_checkIfPrivate();
+
+		if(isVar == true){
+			DEBUG_PRINT("ITS A VAR");
+			_checkIfPrivate(line);
 		}
 
 		if(line!= "}"){
@@ -357,18 +375,27 @@ void addPrivateVariables(string variable){
  	line = "  int ";
  	line += variable;
  	line += ";";
+
  	pthreadStruct.push_back(line);
 }
 
 void parseVariableList(string list){
+	/*
+		TODO: Parse list dont just stop on )
+
+		THis function takes a comma separated string
+		and adds each variable into the variable List;
+
+	*/
+
 	int i = 0;
 
 
 	string variable = list.substr(0, list.find(")"));
 
 	addPrivateVariables(variable);
-	DEBUG_PRINT("HERE!!");
-	DEBUG_PRINT(variable);
+	//DEBUG_PRINT("HERE!!");
+	//DEBUG_PRINT(variable);
 
 }
 
@@ -430,11 +457,10 @@ bool replace(std::string& str, const std::string& from, const std::string& to) {
 bool checkForVariables(string line) {
 	int check  = line.find("int ");
 	if (check != std::string::npos){
-		string list = line.substr(check, line.length());
+		DEBUG_PRINT("FOUND VAR");
 		return true;
-
-
 	}
+
 	return false;
 }
 
