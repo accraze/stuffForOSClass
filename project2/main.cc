@@ -24,7 +24,6 @@ vector<string> privateVariableList;
 
 void DEBUG_PRINT (string line);
 void DEBUG_VECTOR(vector<string>& dict);
-//void DEBUG_ARRAY(implementation *dict);
 void loadVector(vector<string>& source, vector<string>& target);
 void saveProcessedProgram(string programName);
 void parseHeader(ifstream& file);
@@ -43,6 +42,7 @@ void _buildParCode (ifstream& file);
 bool checkForFunction(string line);
 bool isPrivate(string variable);
 void _readDirectiveProgram (ifstream& file);
+bool checkForVariables(string line) ;
 
 
 
@@ -254,6 +254,7 @@ void _buildParCode (ifstream& file){
 
 	_readDirectiveProgram(file);
 }
+
 void _loadParforTemplate (){
 	workFunc.push_back("  int tid = data->tid; ");
 	workFunc.push_back("  int chunk_size = (SIZE / NUM_THREADS); ");
@@ -302,6 +303,12 @@ void _readDirectiveProgram (ifstream& file){
 	int check = line.find("return(0)");
 
 	while(check == std::string::npos){
+		bool isVar = checkForVariables(line);
+
+		if(isVar){
+			//_checkIfPrivate();
+		}
+
 		if(line!= "}"){
 			bool hasConverted = _convertThreadIdentifiers(line);
 			
