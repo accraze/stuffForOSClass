@@ -358,30 +358,40 @@ void _convertDirective(string resultName, ifstream& file) {
 	}
 }
 
-void addPrivateVariables(vector<char>& variables){
-	/*
-		Adds all private variables to the pThreadStruct
-	*/
-		string line;
+void addPrivateVariables(string variable){
+/*
+	Adds all private variables to the pThreadStruct
+*/
+	string line;
 
-	for(std::vector<char>::const_iterator i = variables.begin(); i != variables.end(); ++i) {
-		 	line = "int ";
-		 	line += *i;
-		 	line += ";\n";
-		 	pthreadStruct.push_back(line);
-	 }
+ 	line = "  int ";
+ 	line += variable;
+ 	line += ";";
+ 	pthreadStruct.push_back(line);
 }
 
-void parseVariableList(char *privateList, vector<char>& variables){
-		int i = 0;
-		
-		while(privateList[i] != ')'){
-			if(privateList[i] != ','){
-				variables.push_back(privateList[i]);
-			}
+void parseVariableList(string list){
+	int i = 0;
 
-			i++;
-		}
+		// DEBUG_PRINT("HERE!!");
+		// DEBUG_PRINT(list);
+	
+	// while(list[i] != ')'){
+	// 	while(list[i]& != ")"){
+	// 		i++;
+	// 	}
+
+		string variable = list.substr(0, list.find(")"));
+
+		//variables.push_back(variable);
+		addPrivateVariables(variable);
+		DEBUG_PRINT("HERE!!");
+		DEBUG_PRINT(variable);
+
+	// 	if(list[i] != ')'){
+	// 		i++;
+	// 	}
+	// }
 
 }
 
@@ -389,14 +399,16 @@ void _checkPrivateClause(string line){
 	int check = line.find("private(");
 	
 	if(check != std::string::npos){
-		string list = line.substr(check, line.length());
-		char privateList[list.size()+1];//as 1 char space for null is also required
-		strcpy(privateList, list.c_str());
+		string list = line.substr(check + 8, line.length());
+		//DEBUG_PRINT("HERE!!!!!");
+		//DEBUG_PRINT(list);
+		//char privateList[list.size()+1];//as 1 char space for null is also required
+		//strcpy(privateList, list.c_str());
 
-		vector<char> variables;
-		parseVariableList(privateList, variables);
+		//vector<char> variables;
+		parseVariableList(list);
 
-		addPrivateVariables(variables);
+		//addPrivateVariables(variables);
 		
 	}
 

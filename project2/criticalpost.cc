@@ -6,40 +6,7 @@
 
 typedef struct _thread_data_t {
   int tid;
-int p;
-
-int r;
-
-int i;
-
-int v;
-
-int a;
-
-int t;
-
-int e;
-
-int (;
-
-int l;
-
-int o;
-
-int c;
-
-int a;
-
-int l;
-
-int _;
-
-int s;
-
-int u;
-
-int m;
-
+  int local_sum;
 } thread_data_t;
 
 void *do_work(void *arg) {
