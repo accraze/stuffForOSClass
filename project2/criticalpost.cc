@@ -4,6 +4,8 @@
 
 #define NUM_THREADS local_sum
 
+pthread_mutex_t var=PTHREAD_MUTEX_INITIALIZER;
+
 typedef struct _thread_data_t {
   int tid;
   int local_sum;
@@ -24,11 +26,15 @@ void *do_work(void *arg) {
 	for( i = 0; i < 5; i++ )
 		local_sum += a[i];
 
-	#pragma omp critical
+  pthread_mutex_lock(&var);  // lock the critical section
+
 	{
 		sum += local_sum;
 		printf( "Thread %d: local_sum = %d, sum = %d\n", data->tid, local_sum, sum );
 	}
+  pthread_mutex_unlock(&var); // unlock once you are done
+
+	#pragma omp critical
 
 	printf( "Sum should be 5(4)/2 = %d\n", 5*(5-1)/2 );
 	printf( "Value of sum after parallel region: %d\n", sum );

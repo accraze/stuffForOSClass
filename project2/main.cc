@@ -27,7 +27,7 @@ void DEBUG_VECTOR(vector<string>& dict);
 void loadVector(vector<string>& source, vector<string>& target);
 void saveProcessedProgram(string programName);
 void parseHeader(ifstream& file);
-void load();
+void loadPthreadTemplates();
 string checkForDirective (string line);
 string getNumThreads(string directive);
 void addNumThreads(string line);
@@ -35,14 +35,15 @@ void parseProgram (ifstream& in_stream);
 bool replace(std::string& str, const std::string& from, const std::string& to);
 void _checkNumThreads(string line);
 bool _convertThreadIdentifiers(string line);
-void _convertDirective(string resultName);
+void _convertDirective(string resultName, ifstream& file);
 void closeStruct();
 void closeWorkFunc();
 void _buildParCode (ifstream& file);
 bool checkForFunction(string line);
 bool isPrivate(string variable);
 void _readDirectiveProgram (ifstream& file);
-bool checkForVariables(string line) ;
+bool checkForVariables(string line);
+void _convertClauses(string line);
 
 
 
@@ -68,7 +69,17 @@ void DEBUG_VECTOR(vector<string>& dict) {
 
 string checkForDirective (string line) {
 
-	int check = line.find("#pragma omp parallel for ");
+	int check = line.find("#pragma omp critical");
+	if(check != std::string::npos) {
+		return "critical";
+	}
+
+	check = line.find("#pragma omp for");
+	if(check != std::string::npos) {
+		return "for";
+	}
+
+	check = line.find("#pragma omp parallel for ");
 	if(check != std::string::npos) {
 		return "parfor";
 	}
@@ -131,7 +142,13 @@ void closeWorkFunc(){
 
 }
 
-void load() {
+void closeCriticalSection(){
+	workFunc.push_back("  pthread_mutex_unlock(&var); // unlock once you are done");
+	workFunc.push_back("");
+
+}
+
+void loadPthreadTemplates() {
 	/*
 		Loads all pthread template code into 
 		either the pthread struct, the pthread WorkFunction
@@ -265,6 +282,14 @@ void _loadParforTemplate (){
 
 }
 
+void _loadCriticalTemplate (){
+	header.push_back("pthread_mutex_t var=PTHREAD_MUTEX_INITIALIZER;");
+	header.push_back("");
+
+	workFunc.push_back("  pthread_mutex_lock(&var);  // lock the critical section");
+	workFunc.push_back("");
+}
+
 void addNumSize(string num) {
 	// This method gets the size of for loop from
 	// the openMP program and puts it in the workFunc
@@ -290,10 +315,18 @@ void getForLoopSize(ifstream& file){
 }
 
 void _buildParForCode(ifstream& file){
-	string line;
+
 	_loadParforTemplate();
 	getForLoopSize(file);
 	_readDirectiveProgram(file);
+}
+
+void _buildCriticalCode(ifstream& file){
+	_loadCriticalTemplate();
+	
+	_readDirectiveProgram(file);
+	
+	closeCriticalSection();
 }
 
 void _checkIfPrivate(string line){
@@ -303,6 +336,7 @@ void _checkIfPrivate(string line){
 
 		if(check != std::string::npos){
 			DEBUG_PRINT("FOUND A PRIVATE!!!");
+			DEBUG_PRINT(line);
 			replace(line, *i, "");
 			
 			workFunc.push_back(line);
@@ -317,22 +351,31 @@ void _readDirectiveProgram (ifstream& file) {
 	int check = line.find("return(0)");
 
 	while(check == std::string::npos){
-		bool isVar ;
-		isVar = checkForVariables(line);
-		printf("isVar: %s", isVar ? "true" : "false");
+		// bool isVar = checkForVariables(line);
+		// printf("isVar: %s", isVar ? "true" : "false");
 
+		//DEBUG(line);
+		_checkIfPrivate(line);
 
-		if(isVar == true){
-			DEBUG_PRINT("ITS A VAR");
-			_checkIfPrivate(line);
-		}
+		//check line for directives
+		string directive = checkForDirective(line);
+		
+		if (directive != "null") {
+			
+			_convertClauses(line);
+			_convertDirective(directive, file);
 
-		if(line!= "}"){
+		} 
+
+		if(line != "}"){
 			bool hasConverted = _convertThreadIdentifiers(line);
 			
 			if(!hasConverted){
 				workFunc.push_back(line);	
 			}
+		}
+		else {
+			break;
 		}
 		
 		std::getline (file,line);
@@ -357,6 +400,8 @@ void _convertDirective(string resultName, ifstream& file) {
 	}
 	else if(resultName == "critical") {
 		printf("Critical!!\n");
+		_buildCriticalCode(file);
+
 	}
 	else if(resultName == "for") {
 		printf("For!!\n");
@@ -456,12 +501,14 @@ bool replace(std::string& str, const std::string& from, const std::string& to) {
 
 bool checkForVariables(string line) {
 	int check  = line.find("int ");
+	
 	if (check != std::string::npos){
 		DEBUG_PRINT("FOUND VAR");
 		return true;
+	} 
+	else {
+		return false;
 	}
-
-	return false;
 }
 
 void _convertClauses(string line){
@@ -521,7 +568,7 @@ void parseProgram (ifstream& in_stream){
 		if(!isFunction){
 
 			//check for variable instant
-			checkForVariables(line);
+			bool isVar = checkForVariables(line);
 
 			//check line for directives
 			directive = checkForDirective(line);
@@ -546,21 +593,15 @@ void parseProgram (ifstream& in_stream){
 }
 
 int main (int argc, char *argv[]) {	
-	//vector<string> header;
-	//vector<string> list;
-	string programName;
-
-	load();
-
+	string programName, line, result;
+	string fileName = "INPUT/critical.cc"; 	//in_stream.open(argv[1]);
 	ifstream in_stream;
-	
-	string line;
-	string result;
-	
-	//in_stream.open(argv[1]);
-	programName = getProgramName("INPUT/critical.cc");
-	
+
 	in_stream.open("INPUT/critical.cc");
+
+	programName = getProgramName(fileName);
+
+	loadPthreadTemplates();
 
 	printf("Processing OpenMP program....\n");
 	
