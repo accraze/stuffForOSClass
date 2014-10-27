@@ -114,10 +114,10 @@ string getNumThreads(string directive) {
 	*/
 
 	string numThreads;
-	int start = directive.find("(");
+	int start = directive.find("num_threads(");
 	int end = directive.find(")");
 	
-	numThreads = directive.substr(start+1, end);
+	numThreads = directive.substr(start+12, directive.length());
 
 	end = numThreads.find(")");
 	if(end != std::string::npos){
@@ -322,8 +322,10 @@ void _buildParForCode(ifstream& file){
 }
 
 void _buildCriticalCode(ifstream& file){
+	string line;
+
 	_loadCriticalTemplate();
-	
+
 	_readDirectiveProgram(file);
 	
 	closeCriticalSection();
@@ -353,29 +355,31 @@ void _readDirectiveProgram (ifstream& file) {
 	while(check == std::string::npos){
 		// bool isVar = checkForVariables(line);
 		// printf("isVar: %s", isVar ? "true" : "false");
+		bool isFunction = checkForFunction(line);
 
-		//DEBUG(line);
-		_checkIfPrivate(line);
+		if(isFunction == false){
+			_checkIfPrivate(line);
 
-		//check line for directives
-		string directive = checkForDirective(line);
-		
-		if (directive != "null") {
+			//check line for directives
+			string directive = checkForDirective(line);
 			
-			_convertClauses(line);
-			_convertDirective(directive, file);
+			if (directive != "null") {
+				
+				_convertClauses(line);
+				_convertDirective(directive, file);
 
-		} 
+			} 
 
-		if(line != "}"){
-			bool hasConverted = _convertThreadIdentifiers(line);
-			
-			if(!hasConverted){
-				workFunc.push_back(line);	
+			if(line != "}"){
+				bool hasConverted = _convertThreadIdentifiers(line);
+				
+				if(!hasConverted){
+					workFunc.push_back(line);	
+				}
 			}
-		}
-		else {
-			break;
+			else {
+				break;
+			}
 		}
 		
 		std::getline (file,line);
