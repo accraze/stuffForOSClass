@@ -598,10 +598,10 @@ void parseProgram (ifstream& in_stream){
 
 int main (int argc, char *argv[]) {	
 	string programName, line, result;
-	string fileName = "INPUT/critical.cc"; 	//in_stream.open(argv[1]);
+	string fileName = "INPUT/par.cc"; 	//in_stream.open(argv[1]);
 	ifstream in_stream;
 
-	in_stream.open("INPUT/critical.cc");
+	in_stream.open("INPUT/par.cc");
 
 	programName = getProgramName(fileName);
 
