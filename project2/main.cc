@@ -9,6 +9,7 @@ using namespace std;
 #define NUM_PFUNC 6
 #define DEBUG true
 
+bool FIRST_DIRECTIVE = false;
 
 vector<string> header;
 vector<string> pthreadStruct;
@@ -149,20 +150,7 @@ void closeCriticalSection(){
 	workFunc.push_back("  pthread_mutex_unlock(&var); // unlock once you are done");
 }
 
-void loadPthreadTemplates() {
-	/*
-		Loads all pthread template code into 
-		either the pthread struct, the pthread WorkFunction
-		or the main function vectors.
-	*/
-	
-	pthreadStruct.push_back("typedef struct _thread_data_t {");
-	pthreadStruct.push_back("  int tid;");
-
-	workFunc.push_back("void *do_work(void *arg) {");
-	workFunc.push_back("  thread_data_t *data = (thread_data_t *)arg;");
-
-	mainFunc.push_back("int main(int argc, char **argv) {");
+void addMainFuncTemplate(){
 	mainFunc.push_back("  pthread_t thr[NUM_THREADS];");
 	mainFunc.push_back("  int z, rc;");
 	mainFunc.push_back("  thread_data_t thr_data[NUM_THREADS];");
@@ -179,8 +167,30 @@ void loadPthreadTemplates() {
 	mainFunc.push_back("    pthread_join(thr[z], NULL);");
 	mainFunc.push_back("  }");
 	mainFunc.push_back("");
+
+}
+
+void closeMainFunc(){
+
+	mainFunc.push_back("");
 	mainFunc.push_back("  return EXIT_SUCCESS;");
 	mainFunc.push_back("}");
+}
+
+void loadPthreadTemplates() {
+	/*
+		Loads all pthread template code into 
+		either the pthread struct, the pthread WorkFunction
+		or the main function vectors.
+	*/
+	
+	pthreadStruct.push_back("typedef struct _thread_data_t {");
+	pthreadStruct.push_back("  int tid;");
+
+	workFunc.push_back("void *do_work(void *arg) {");
+	workFunc.push_back("  thread_data_t *data = (thread_data_t *)arg;");
+
+	mainFunc.push_back("int main(int argc, char **argv) {");
 
 	DEBUG_PRINT("ALL LOADED@!!@");
 	//DEBUG_ARRAY(parallelFuncs);
@@ -367,7 +377,15 @@ void _buildForCode(ifstream& file){
 }
 
 bool _checkIfPrivate(string line){
-	//iterate through all private variables
+	/*
+		Checks to see if line contains
+		known private variables. If one 
+		is found, then we replace it with the
+		pthread call, then we check a 2nd time
+		and add newly appended line to the workFunc
+
+	*/
+
 	DEBUG_PRINT("Checking if Private");
 	int i;
 	for( i = 0; i < privateCount; i++){
@@ -392,6 +410,12 @@ bool _checkIfPrivate(string line){
 
 				string processedLine = oldLine + newLine;
 				DEBUG_PRINT(processedLine);
+				
+				int checkTID = processedLine.find("omp_get_thread_num(),");
+				if(checkTID != std::string::npos){
+					replace(processedLine, "omp_get_thread_num(),", "data->tid,");
+				}
+
 				line = processedLine;
 			}
 			
@@ -661,6 +685,11 @@ void parseProgram (ifstream& in_stream){
 				directive = checkForDirective(line);
 				
 				if (directive != "null") {	
+					if(!FIRST_DIRECTIVE){
+						FIRST_DIRECTIVE = true;
+						addMainFuncTemplate();
+					}
+
 					_convertClauses(line);
 					
 					_convertDirective(directive, in_stream);
@@ -669,7 +698,7 @@ void parseProgram (ifstream& in_stream){
 					bool hasConverted = _convertThreadIdentifiers(line);
 					
 					if(!hasConverted){
-						workFunc.push_back(line);
+						mainFunc.push_back(line);
 					}
 				}
 			}
@@ -679,6 +708,8 @@ void parseProgram (ifstream& in_stream){
 	closeStruct();
 	
 	closeWorkFunc();
+
+	closeMainFunc();
 }
 
 int main (int argc, char *argv[]) {	

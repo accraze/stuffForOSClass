@@ -17,13 +17,6 @@ typedef struct _thread_data_t {
 
 void *do_work(void *arg) {
   thread_data_t *data = (thread_data_t *)arg;
-	printf( "Example of the critical construct\n" );
-
-	for( i = 0; i < 5; i++ )
-		a[i] = i;
-
-	sum = 0;
-
 
   int tid = data->tid; 
   int chunk_size = (SIZE / NUM_THREADS); 
@@ -36,18 +29,20 @@ void *do_work(void *arg) {
   pthread_mutex_lock(&var);  // lock the critical section
 
 		sum += data->local_sum;
-		printf( "Thread %d: data->local_sum = %d, sum = %d\n", omp_get_thread_num(), data->local_sum, sum );
+		printf( "Thread %d: data->local_sum = %d, sum = %d\n", data->tid, data->local_sum, sum );
 
   pthread_mutex_unlock(&var); // unlock once you are done
-
-	printf( "Sum should be 5(4)/2 = %d\n", 5*(5-1)/2 );
-	printf( "Value of sum after parallel region: %d\n", sum );
-	return(0);
-
   pthread_exit(NULL);
 }
 
 int main(int argc, char **argv) {
+	printf( "Example of the critical construct\n" );
+
+	for( i = 0; i < 5; i++ )
+		a[i] = i;
+
+	sum = 0;
+
   pthread_t thr[NUM_THREADS];
   int z, rc;
   thread_data_t thr_data[NUM_THREADS];
@@ -63,6 +58,12 @@ int main(int argc, char **argv) {
   for (z = 0; z < NUM_THREADS; ++z) {
     pthread_join(thr[z], NULL);
   }
+
+
+	printf( "Sum should be 5(4)/2 = %d\n", 5*(5-1)/2 );
+	printf( "Value of sum after parallel region: %d\n", sum );
+	return(0);
+
 
   return EXIT_SUCCESS;
 }
