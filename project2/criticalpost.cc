@@ -22,7 +22,6 @@ void *do_work(void *arg) {
 	sum = 0;
 
 
-	#pragma omp for 
 	for( i = 0; i < 5; i++ )
 		local_sum += a[i];
 
@@ -32,7 +31,6 @@ void *do_work(void *arg) {
 		printf( "Thread %d: local_sum = %d, sum = %d\n", data->tid, local_sum, sum );
   pthread_mutex_unlock(&var); // unlock once you are done
 
-	#pragma omp critical
 
 	printf( "Sum should be 5(4)/2 = %d\n", 5*(5-1)/2 );
 	printf( "Value of sum after parallel region: %d\n", sum );

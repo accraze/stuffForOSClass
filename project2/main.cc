@@ -372,8 +372,7 @@ void _readDirectiveProgram (ifstream& file) {
 				_convertDirective(directive, file);
 
 			} 
-
-			if(line != "}"){
+			else if(line != "}"){
 				bool hasConverted = _convertThreadIdentifiers(line);
 				
 				if(!hasConverted){
