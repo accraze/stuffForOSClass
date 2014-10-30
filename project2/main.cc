@@ -15,7 +15,9 @@ vector<string> pthreadStruct;
 vector<string> workFunc;
 vector<string> mainFunc;
 
-vector<string> privateVariableList;
+//vector<string> privateVariableList;
+string privateVariableList[20];
+int privateCount = 0;
 
 
 //************************ //
@@ -40,8 +42,8 @@ void closeStruct();
 void closeWorkFunc();
 void _buildParCode (ifstream& file);
 bool checkForFunction(string line);
-bool isPrivate(string variable);
-void _readDirectiveProgram (ifstream& file);
+bool _checkIfPrivate(string line);
+void _readDirectiveProgram(ifstream& file);
 bool checkForVariables(string line);
 void _convertClauses(string line);
 
@@ -282,6 +284,22 @@ void _loadParforTemplate (){
 
 }
 
+void _loadForTemplate (){
+	/*
+		loads basic omp for construct templates
+		into the worker function of new code.
+	*/
+
+
+	workFunc.push_back("  int tid = data->tid; ");
+	workFunc.push_back("  int chunk_size = (SIZE / NUM_THREADS); ");
+	workFunc.push_back("  int start = tid * chunk_size; ");
+	workFunc.push_back("  int end = start + chunk_size;");
+	workFunc.push_back("");
+	workFunc.push_back("  for(int i = start; i < end; i++)");
+
+}
+
 void _loadCriticalTemplate (){
 	header.push_back("pthread_mutex_t var=PTHREAD_MUTEX_INITIALIZER;");
 	header.push_back("");
@@ -326,29 +344,54 @@ void _buildCriticalCode(ifstream& file){
 
 	_loadCriticalTemplate();
 
-	std::getline (file,line);
+	std::getline (file,line); // TODO: do this really belong here?
 
 	_readDirectiveProgram(file);
 	
 	closeCriticalSection();
 }
 
-void _checkIfPrivate(string line){
+void _buildForCode(ifstream& file){
+	string line;
+	
+	getForLoopSize(file);
+
+	_loadForTemplate();
+
+	std::getline (file,line);
+	bool isPrivate = _checkIfPrivate(line);
+	
+	if(!isPrivate){
+		workFunc.push_back(line);
+	}
+
+}
+
+bool _checkIfPrivate(string line){
 	//iterate through all private variables
-	for( std::vector<string>::const_iterator i = privateVariableList.begin(); i != privateVariableList.end(); ++i){
-		int check = line.find(*i);
+	int i;
+	for( i = 0; i < privateCount; i++){
+		int check = line.find(privateVariableList[i]);
 
 		if(check != std::string::npos){
 			DEBUG_PRINT("FOUND A PRIVATE!!!");
 			DEBUG_PRINT(line);
-			replace(line, *i, "");
+			replace(line, privateVariableList[i], "data->" + privateVariableList[i]);
 			
 			workFunc.push_back(line);
+			return true;
 		}
 	}
+	return false;
 }
 
 void _readDirectiveProgram (ifstream& file) {
+	/* 
+		This is the file reading loop which 
+		is run once the first directive has been
+		located.
+	*/
+
 	string line;
 	std::getline (file,line);
 
@@ -359,8 +402,9 @@ void _readDirectiveProgram (ifstream& file) {
 		// bool isVar = checkForVariables(line);
 		// printf("isVar: %s", isVar ? "true" : "false");
 		bool isFunction = checkForFunction(line);
+		bool isPrivate = _checkIfPrivate(line);
 
-		if(isFunction == false){
+		if(isFunction == false && isPrivate == false){
 			_checkIfPrivate(line);
 
 			//check line for directives
@@ -371,7 +415,7 @@ void _readDirectiveProgram (ifstream& file) {
 				_convertClauses(line);
 				_convertDirective(directive, file);
 
-			} 
+			}         
 			else if(line != "}"){
 				bool hasConverted = _convertThreadIdentifiers(line);
 				
@@ -414,6 +458,7 @@ void _convertDirective(string resultName, ifstream& file) {
 	}
 	else if(resultName == "for") {
 		printf("For!!\n");
+		_buildForCode(file);
 	}
 	else if(resultName == "single") {
 		printf("Single!!\n");
