@@ -326,6 +326,8 @@ void _buildCriticalCode(ifstream& file){
 
 	_loadCriticalTemplate();
 
+	std::getline (file,line);
+
 	_readDirectiveProgram(file);
 	
 	closeCriticalSection();
@@ -351,8 +353,9 @@ void _readDirectiveProgram (ifstream& file) {
 	std::getline (file,line);
 
 	int check = line.find("return(0)");
+	int check2 = line.find("}");
 
-	while(check == std::string::npos){
+	while(check == std::string::npos && check2 == std::string::npos){
 		// bool isVar = checkForVariables(line);
 		// printf("isVar: %s", isVar ? "true" : "false");
 		bool isFunction = checkForFunction(line);
@@ -384,7 +387,10 @@ void _readDirectiveProgram (ifstream& file) {
 		
 		std::getline (file,line);
 			
+
 		check = line.find("return(0)");
+		check2 = line.find("}");
+
 	}
 }
 
@@ -598,10 +604,10 @@ void parseProgram (ifstream& in_stream){
 
 int main (int argc, char *argv[]) {	
 	string programName, line, result;
-	string fileName = "INPUT/parfor.cc"; 	//in_stream.open(argv[1]);
+	string fileName = "INPUT/critical.cc"; 	//in_stream.open(argv[1]);
 	ifstream in_stream;
 
-	in_stream.open("INPUT/parfor.cc");
+	in_stream.open("INPUT/critical.cc");
 
 	programName = getProgramName(fileName);
 

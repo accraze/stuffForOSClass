@@ -2,7 +2,7 @@
 #include	<stdlib.h>
 #include 	<pthread.h>
 
-#define NUM_THREADS local_sum
+#define NUM_THREADS 4
 
 pthread_mutex_t var=PTHREAD_MUTEX_INITIALIZER;
 
@@ -28,16 +28,15 @@ void *do_work(void *arg) {
 
   pthread_mutex_lock(&var);  // lock the critical section
 
-	{
 		sum += local_sum;
 		printf( "Thread %d: local_sum = %d, sum = %d\n", data->tid, local_sum, sum );
-	}
   pthread_mutex_unlock(&var); // unlock once you are done
 
 	#pragma omp critical
 
 	printf( "Sum should be 5(4)/2 = %d\n", 5*(5-1)/2 );
 	printf( "Value of sum after parallel region: %d\n", sum );
+	return(0);
 
   pthread_exit(NULL);
 }
