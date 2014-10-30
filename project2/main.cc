@@ -145,9 +145,8 @@ void closeWorkFunc(){
 }
 
 void closeCriticalSection(){
-	workFunc.push_back("  pthread_mutex_unlock(&var); // unlock once you are done");
 	workFunc.push_back("");
-
+	workFunc.push_back("  pthread_mutex_unlock(&var); // unlock once you are done");
 }
 
 void loadPthreadTemplates() {
@@ -379,7 +378,22 @@ bool _checkIfPrivate(string line){
 		if(check != std::string::npos){
 			DEBUG_PRINT("FOUND A PRIVATE!!!");
 			DEBUG_PRINT(line);
-			replace(line, privateVariableList[i], "data->" + privateVariableList[i]);
+			DEBUG_PRINT(privateVariableList[i]);
+
+			replace(line, privateVariableList[i] + "", "data->" + privateVariableList[i]);
+			
+			check = line.find(privateVariableList[i]+",");
+			
+			if(check != std::string::npos){
+				string oldLine = line.substr(0, check);
+				string newLine = line.substr(check, line.length());
+
+				replace(newLine, privateVariableList[i]+ ",", "data->" + privateVariableList[i]+",");
+
+				string processedLine = oldLine + newLine;
+				DEBUG_PRINT(processedLine);
+				line = processedLine;
+			}
 			
 			workFunc.push_back(line);
 			return true;
@@ -433,10 +447,8 @@ void _readDirectiveProgram (ifstream& file) {
 		
 		std::getline (file,line);
 			
-
 		check = line.find("return(0)");
 		check2 = line.find("}");
-
 	}
 }
 
@@ -470,7 +482,7 @@ void _convertDirective(string resultName, ifstream& file) {
 
 void addPrivateVariables(string variable){
 	/*
-		Adds all private variables to the pThreadStruct
+		Adds a private variables to the pThreadStruct
 	*/
 	string line;
 
@@ -486,7 +498,7 @@ void parseVariableList(string list){
 		TODO: Parse list dont just stop on )
 
 		THis function takes a comma separated string
-		and adds each variable into the variable List;
+		and adds each variable into the privatre variable List;
 
 	*/
 
@@ -500,9 +512,6 @@ void parseVariableList(string list){
 	privateCount++;
 
 	addPrivateVariables(variable);
-	//DEBUG_PRINT("HERE!!");
-	//DEBUG_PRINT(variable);
-
 }
 
 void _checkPrivateClause(string line){
@@ -568,10 +577,18 @@ bool replace(std::string& str, const std::string& from, const std::string& to) {
 }
 
 bool checkForVariables(string line) {
+	/*
+		This checks to see if variables
+		are being instantiated.
+	*/
 	int check  = line.find("int ");
+	int check2  = line.find("=");
 	
-	if (check != std::string::npos){
+	if (check != std::string::npos && check2 == -1){
 		DEBUG_PRINT("FOUND VAR");
+		replace(line, "\t", "");
+		header.push_back(line);
+		header.push_back("");
 		return true;
 	} 
 	else {
@@ -633,30 +650,34 @@ void parseProgram (ifstream& in_stream){
 		//check for function names and brackets
 		bool isFunction = checkForFunction(line);
 
+
 		if(!isFunction){
 
 			//check for variable instant
 			bool isVar = checkForVariables(line);
+			if(!isVar){
 
-			//check line for directives
-			directive = checkForDirective(line);
-			
-			if (directive != "null") {
+				//check line for directives
+				directive = checkForDirective(line);
 				
-				_convertClauses(line);
-				_convertDirective(directive, in_stream);
-
-			} 
-			else {
-				bool hasConverted = _convertThreadIdentifiers(line);
-				
-				if(!hasConverted){
-					workFunc.push_back(line);
+				if (directive != "null") {	
+					_convertClauses(line);
+					
+					_convertDirective(directive, in_stream);
+				} 
+				else {
+					bool hasConverted = _convertThreadIdentifiers(line);
+					
+					if(!hasConverted){
+						workFunc.push_back(line);
+					}
 				}
 			}
 		}	
 	}
+
 	closeStruct();
+	
 	closeWorkFunc();
 }
 

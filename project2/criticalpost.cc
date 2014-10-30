@@ -2,6 +2,8 @@
 #include	<stdlib.h>
 #include 	<pthread.h>
 
+int i, a[5], local_sum, sum;
+
 #define NUM_THREADS 4
 
 #define SIZE  5
@@ -15,7 +17,6 @@ typedef struct _thread_data_t {
 
 void *do_work(void *arg) {
   thread_data_t *data = (thread_data_t *)arg;
-	int i, a[5], local_sum, sum;
 	printf( "Example of the critical construct\n" );
 
 	for( i = 0; i < 5; i++ )
@@ -35,9 +36,9 @@ void *do_work(void *arg) {
   pthread_mutex_lock(&var);  // lock the critical section
 
 		sum += data->local_sum;
-		printf( "Thread %d: data->local_sum = %d, sum = %d\n", omp_get_thread_num(), local_sum, sum );
-  pthread_mutex_unlock(&var); // unlock once you are done
+		printf( "Thread %d: data->local_sum = %d, sum = %d\n", omp_get_thread_num(), data->local_sum, sum );
 
+  pthread_mutex_unlock(&var); // unlock once you are done
 
 	printf( "Sum should be 5(4)/2 = %d\n", 5*(5-1)/2 );
 	printf( "Value of sum after parallel region: %d\n", sum );
