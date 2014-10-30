@@ -30,12 +30,12 @@ void *do_work(void *arg) {
   int end = start + chunk_size;
 
   for(int i = start; i < end; i++)
-		local_sum += a[i];
+		data->local_sum += a[i];
 
   pthread_mutex_lock(&var);  // lock the critical section
 
-		sum += local_sum;
-		printf( "Thread %d: local_sum = %d, sum = %d\n", data->tid, local_sum, sum );
+		sum += data->local_sum;
+		printf( "Thread %d: data->local_sum = %d, sum = %d\n", omp_get_thread_num(), local_sum, sum );
   pthread_mutex_unlock(&var); // unlock once you are done
 
 

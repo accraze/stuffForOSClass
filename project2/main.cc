@@ -369,10 +369,13 @@ void _buildForCode(ifstream& file){
 
 bool _checkIfPrivate(string line){
 	//iterate through all private variables
+	DEBUG_PRINT("Checking if Private");
 	int i;
 	for( i = 0; i < privateCount; i++){
+
 		int check = line.find(privateVariableList[i]);
 
+		printf("%d\n",check );
 		if(check != std::string::npos){
 			DEBUG_PRINT("FOUND A PRIVATE!!!");
 			DEBUG_PRINT(line);
@@ -492,6 +495,10 @@ void parseVariableList(string list){
 
 	string variable = list.substr(0, list.find(")"));
 
+	privateVariableList[privateCount] = variable;
+	DEBUG_PRINT(variable);
+	privateCount++;
+
 	addPrivateVariables(variable);
 	//DEBUG_PRINT("HERE!!");
 	//DEBUG_PRINT(variable);
@@ -499,12 +506,19 @@ void parseVariableList(string list){
 }
 
 void _checkPrivateClause(string line){
+	/*
+		Checks to see if there is a 
+		omp private clause in given line.
+		If found, it adds to global privateList,
+		incrememnts the privateCount and then
+		adds code to pthread struct.
+	*/ 
 	int check = line.find("private(");
 	
 	if(check != std::string::npos){
 		string list = line.substr(check + 8, line.length());
-		parseVariableList(list);
-		
+
+		parseVariableList(list);		
 	}
 
 }
