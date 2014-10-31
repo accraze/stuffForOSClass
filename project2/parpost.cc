@@ -10,15 +10,15 @@ typedef struct _thread_data_t {
 
 void *do_work(void *arg) {
   thread_data_t *data = (thread_data_t *)arg;
-
+	printf( "The parallel region is executed by thread %d\n", data->tid );
 
 	if( data->tid == 2 )
 		printf( "   Thread %d does things differently\n", data->tid );
-
   pthread_exit(NULL);
 }
 
 int main(int argc, char **argv) {
+
   pthread_t thr[NUM_THREADS];
   int z, rc;
   thread_data_t thr_data[NUM_THREADS];
@@ -34,6 +34,9 @@ int main(int argc, char **argv) {
   for (z = 0; z < NUM_THREADS; ++z) {
     pthread_join(thr[z], NULL);
   }
+
+	return(0);
+
 
   return EXIT_SUCCESS;
 }

@@ -275,9 +275,15 @@ string getProgramName(string fileName) {
 }
 
 void _buildParCode (ifstream& file){
+	/*
+		Skips the open curly brace
+		and then enters the directive
+		reading loop.
+	*/
+		
 	string line;
 
-	std::getline (file,line);
+	//skip open curly brace
 	std::getline (file,line);
 
 	_readDirectiveProgram(file);
@@ -714,10 +720,10 @@ void parseProgram (ifstream& in_stream){
 
 int main (int argc, char *argv[]) {	
 	string programName, line, result;
-	string fileName = "INPUT/critical.cc"; 	//in_stream.open(argv[1]);
+	string fileName = "INPUT/par.cc"; 	//in_stream.open(argv[1]);
 	ifstream in_stream;
 
-	in_stream.open("INPUT/critical.cc");
+	in_stream.open("INPUT/par.cc");
 
 	programName = getProgramName(fileName);
 
