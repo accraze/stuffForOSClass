@@ -3,11 +3,12 @@
 #include <iterator>
 #include <vector>
 #include <stdio.h>
+#include <string>
 
 using namespace std;
 
 #define NUM_PFUNC 6
-#define DEBUG true
+
 
 bool FIRST_DIRECTIVE = false;
 
@@ -41,6 +42,7 @@ bool _convertThreadIdentifiers(string line);
 void _convertDirective(string resultName, ifstream& file);
 void closeStruct();
 void closeWorkFunc();
+void _closeTemplates();
 void _buildParCode (ifstream& file);
 bool checkForFunction(string line);
 bool _checkIfPrivate(string line);
@@ -48,53 +50,9 @@ void _readDirectiveProgram(ifstream& file);
 bool checkForVariables(string line);
 void _convertClauses(string line);
 
-
-
-
  //**************************//
  //      DEBUG UTILITIES    //
 //*************************//
-void DEBUG_PRINT (string line) {
-	if(DEBUG == true){
-		cout << "+++++++++++++++++++++++++++++++++++++++++++++++" << endl;
-		cout << line << endl;		
-	}
-}
-
-void DEBUG_VECTOR(vector<string>& dict) {
- 	if(DEBUG){
-		 DEBUG_PRINT("VECTOR DEBUG");	
-
-		 for( std::vector<string>::const_iterator i = dict.begin(); i != dict.end(); ++i)
-		 	std::cout << *i << ' ' << endl;
-	 	}
-}
-
-string checkForDirective (string line) {
-
-	int check = line.find("#pragma omp critical");
-	if(check != std::string::npos) {
-		return "critical";
-	}
-
-	check = line.find("#pragma omp for");
-	if(check != std::string::npos) {
-		return "for";
-	}
-
-	check = line.find("#pragma omp parallel for ");
-	if(check != std::string::npos) {
-		return "parfor";
-	}
-
-	check = line.find("#pragma omp parallel ");
-	if(check != std::string::npos) {
-		return "par";
-	}
-
-
-	return "null";
-}
 
 void addNumThreads(string inputLine) {
 	// This method gets the number of threads from
@@ -135,14 +93,12 @@ string getNumThreads(string directive) {
 void closeStruct(){
 	pthreadStruct.push_back("} thread_data_t;");
 	pthreadStruct.push_back("");
-
 }
 
 void closeWorkFunc(){
 	workFunc.push_back("  pthread_exit(NULL);");
 	workFunc.push_back("}");
 	workFunc.push_back("");
-
 }
 
 void closeCriticalSection(){
@@ -280,7 +236,7 @@ void _buildParCode (ifstream& file){
 		and then enters the directive
 		reading loop.
 	*/
-		
+
 	string line;
 
 	//skip open curly brace
@@ -711,6 +667,10 @@ void parseProgram (ifstream& in_stream){
 		}	
 	}
 
+	_closeTemplates();
+}
+
+void _closeTemplates() {
 	closeStruct();
 	
 	closeWorkFunc();
@@ -720,10 +680,10 @@ void parseProgram (ifstream& in_stream){
 
 int main (int argc, char *argv[]) {	
 	string programName, line, result;
-	string fileName = "INPUT/par.cc"; 	//in_stream.open(argv[1]);
+	string fileName = "INPUT/parfor.cc"; 	//TODO: SWITCH TO in_stream.open(argv[1]);
 	ifstream in_stream;
 
-	in_stream.open("INPUT/par.cc");
+	in_stream.open("INPUT/parfor.cc");
 
 	programName = getProgramName(fileName);
 

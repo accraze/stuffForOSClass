@@ -1,3 +1,3 @@
 All:
-	g++ main.cc -o a.out
+	g++ main.cc utility.cc -o a.out
 	./a.out
