@@ -18,15 +18,19 @@ void funcB()
 int main()
 {
 
-#pragma omp parallel num_threads(2)
-{
-	#pragma omp sections
+	#pragma omp parallel num_threads(2)
 	{
-		#pragma omp section
-			(void) funcA();
+		#pragma omp sections
+		{
+			#pragma omp section
+			{
+				(void) funcA();
+			}
 
-		#pragma omp section
-			(void) funcB();
+			#pragma omp section
+			{
+				(void) funcB();
+			}
+		}
 	}
-}
 }

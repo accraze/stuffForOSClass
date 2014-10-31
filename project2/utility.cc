@@ -9,6 +9,10 @@ using namespace std;
 
 #define DEBUG true
 
+ //**************************//
+ //      DEBUG UTILITIES    //
+//*************************//
+
 void DEBUG_PRINT (string line) {
 	if(DEBUG == true){
 		cout << "+++++++++++++++++++++++++++++++++++++++++++++++" << endl;

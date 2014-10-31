@@ -17,17 +17,18 @@ int main()
 
 	printf( "Illustrate the barrier construct\n" );
 
-#pragma omp parallel private(tid) num_threads(4)
-{
-	tid = omp_get_thread_num();
-	if( tid < 2 )
-		system( "sleep 1" );
+	#pragma omp parallel private(tid) num_threads(4)
+	{
+		tid = omp_get_thread_num();
+		if( tid < 2 )
+			system( "sleep 1" );
 
-	(void) print_time( tid, (char * ) "before" );
+		(void) print_time( tid, (char * ) "before" );
 
-	#pragma omp barrier
+		#pragma omp barrier
 
-	(void) print_time( tid, (char * ) "after" );
-}
+		(void) print_time( tid, (char * ) "after" );
+	}
+
 	return(0);
 }

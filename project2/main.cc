@@ -17,7 +17,6 @@ vector<string> pthreadStruct;
 vector<string> workFunc;
 vector<string> mainFunc;
 
-//vector<string> privateVariableList;
 string privateVariableList[20];
 int privateCount = 0;
 
@@ -50,18 +49,31 @@ void _readDirectiveProgram(ifstream& file);
 bool checkForVariables(string line);
 void _convertClauses(string line);
 
- //**************************//
- //      DEBUG UTILITIES    //
-//*************************//
+// FUNCTIONS //
 
 void addNumThreads(string inputLine) {
-	// This method gets the number of threads from
-	// the openMP program and puts it in the header
-	// of the Pthreads implementation.
-
+	/* 
+	This method gets the number of threads from
+	the openMP program and puts it in the header
+	 of the Pthreads implementation.
+	*/
 	string num = getNumThreads(inputLine);
 
 	string line = "#define NUM_THREADS ";
+	line += num;
+
+	header.push_back(line);
+	header.push_back("");
+}
+
+void addNumSize(string num) {
+	/* 
+	This method gets the size of for loop from
+ 	the openMP program and puts it in the 
+ 	workFunc of the Pthreads implementation.
+	*/
+
+	string line = "#define SIZE ";
 	line += num;
 
 	header.push_back(line);
@@ -123,7 +135,6 @@ void addMainFuncTemplate(){
 	mainFunc.push_back("    pthread_join(thr[z], NULL);");
 	mainFunc.push_back("  }");
 	mainFunc.push_back("");
-
 }
 
 void closeMainFunc(){
@@ -252,7 +263,6 @@ void _loadParforTemplate (){
 	workFunc.push_back("  int end = start + chunk_size;");
 	workFunc.push_back("");
 	workFunc.push_back("  for(int i = start; i < end; i++)");
-
 }
 
 void _loadForTemplate (){
@@ -268,7 +278,6 @@ void _loadForTemplate (){
 	workFunc.push_back("  int end = start + chunk_size;");
 	workFunc.push_back("");
 	workFunc.push_back("  for(int i = start; i < end; i++)");
-
 }
 
 void _loadCriticalTemplate (){
@@ -277,18 +286,6 @@ void _loadCriticalTemplate (){
 
 	workFunc.push_back("  pthread_mutex_lock(&var);  // lock the critical section");
 	workFunc.push_back("");
-}
-
-void addNumSize(string num) {
-	// This method gets the size of for loop from
-	// the openMP program and puts it in the workFunc
-	// of the Pthreads implementation.
-
-	string line = "#define SIZE ";
-	line += num;
-
-	header.push_back(line);
-	header.push_back("");
 }
 
 void getForLoopSize(ifstream& file){
@@ -445,24 +442,24 @@ void _convertDirective(string resultName, ifstream& file) {
  	*/
 
 	if(resultName == "par") {
-		printf("par!!\n");
+		DEBUG_PRINT("par!!");
 		_buildParCode(file);
 	}
 	else if(resultName == "parfor"){
-		printf("Parfor!!\n");
+		DEBUG_PRINT("Parfor!!");
 		_buildParForCode(file);
 	}
 	else if(resultName == "critical") {
-		printf("Critical!!\n");
+		DEBUG_PRINT("Critical!!");
 		_buildCriticalCode(file);
 
 	}
 	else if(resultName == "for") {
-		printf("For!!\n");
+		DEBUG_PRINT("For!!");
 		_buildForCode(file);
 	}
 	else if(resultName == "single") {
-		printf("Single!!\n");
+		DEBUG_PRINT("Single!!");
 	}
 }
 
