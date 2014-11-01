@@ -2,18 +2,23 @@
 #include	<stdlib.h>
 #include 	<pthread.h>
 
+int id;
+
 #define NUM_THREADS 16
 
 typedef struct _thread_data_t {
   int tid;
+  int id;
 } thread_data_t;
 
 void *do_work(void *arg) {
   thread_data_t *data = (thread_data_t *)arg;
-	printf( "The parallel region is executed by thread %d\n", data->tid );
+		data->id = omp_get_thread_num();
 
-	if( data->tid == 2 )
-		printf( "   Thread %d does things differently\n", data->tid );
+		printf( "The parallel region is executed by thread %d\n", data->id );
+
+		if( data->id == 2 )
+			printf( "   Thread %d does things differently\n", data->id );
   pthread_exit(NULL);
 }
 
@@ -34,6 +39,7 @@ int main(int argc, char **argv) {
   for (z = 0; z < NUM_THREADS; ++z) {
     pthread_join(thr[z], NULL);
   }
+
 
 	return(0);
 

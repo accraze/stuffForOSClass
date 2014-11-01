@@ -212,7 +212,7 @@ void saveProcessedProgram(string programName) {
 		and mainFunc, then writes to file 
 	*/
 
-	string fileName = "./" + programName + "post.cc";
+	string fileName = "OUTPUT/" + programName + "post.cc";
 
 	ofstream output_file(fileName.c_str());
     
@@ -322,7 +322,9 @@ void getForLoopSize(ifstream& file){
 void _buildParForCode(ifstream& file){
 
 	_loadParforTemplate();
+
 	getForLoopSize(file);
+
 	_readDirectiveProgram(file);
 }
 
@@ -359,6 +361,7 @@ void _buildForCode(ifstream& file){
 
 	_closeForSection();
 }
+
 void _buildSingleCode(ifstream& file){
 	string line;
 
@@ -368,6 +371,7 @@ void _buildSingleCode(ifstream& file){
 
 	_closeSingleSection();
 }
+
 bool _checkIfPrivate(string line){
 	/*
 		Checks to see if line contains
@@ -710,10 +714,13 @@ void _closeTemplates() {
 
 int main (int argc, char *argv[]) {	
 	string programName, line, result;
-	string fileName = "INPUT/single.cc"; 	//TODO: SWITCH TO in_stream.open(argv[1]);
+	
 	ifstream in_stream;
 
-	in_stream.open("INPUT/single.cc");
+	string fileName = argv[1]; 	//TODO: SWITCH TO in_stream.open(argv[1]);
+
+	in_stream.open(argv[1]);
+	//in_stream.open(fileName);
 
 	programName = getProgramName(fileName);
 
