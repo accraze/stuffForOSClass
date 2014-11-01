@@ -41,6 +41,7 @@ bool _convertThreadIdentifiers(string line);
 void _convertDirective(string resultName, ifstream& file);
 void closeStruct();
 void closeWorkFunc();
+void _closeSingleSection();
 void _closeTemplates();
 void _buildParCode (ifstream& file);
 bool checkForFunction(string line);
@@ -48,6 +49,7 @@ bool _checkIfPrivate(string line);
 void _readDirectiveProgram(ifstream& file);
 bool checkForVariables(string line);
 void _convertClauses(string line);
+void _loadSingleTemplate();
 
 // FUNCTIONS //
 
@@ -142,6 +144,14 @@ void closeMainFunc(){
 	mainFunc.push_back("");
 	mainFunc.push_back("  return EXIT_SUCCESS;");
 	mainFunc.push_back("}");
+}
+
+void _closeSingleSection (){
+	workFunc.push_back("  }");
+}
+
+void _closeForSection (){
+	workFunc.push_back("  }");
 }
 
 void loadPthreadTemplates() {
@@ -277,7 +287,7 @@ void _loadForTemplate (){
 	workFunc.push_back("  int start = tid * chunk_size; ");
 	workFunc.push_back("  int end = start + chunk_size;");
 	workFunc.push_back("");
-	workFunc.push_back("  for(int i = start; i < end; i++)");
+	workFunc.push_back("  for(int i = start; i < end; i++){");
 }
 
 void _loadCriticalTemplate (){
@@ -285,7 +295,16 @@ void _loadCriticalTemplate (){
 	header.push_back("");
 
 	workFunc.push_back("  pthread_mutex_lock(&var);  // lock the critical section");
-	workFunc.push_back("");
+	workFunc.push_back("");	
+}
+
+void _loadSingleTemplate(){
+	header.push_back("bool signalFlag = false;");
+	header.push_back("");
+
+	
+	workFunc.push_back("  if(!signalFlag){");
+	workFunc.push_back("    signalFlag = true;");
 }
 
 void getForLoopSize(ifstream& file){
@@ -328,13 +347,27 @@ void _buildForCode(ifstream& file){
 
 	std::getline (file,line);
 	bool isPrivate = _checkIfPrivate(line);
+	bool isFunc = checkForFunction(line);
 	
-	if(!isPrivate){
+	if(!isPrivate && !isFunc){
 		workFunc.push_back(line);
 	}
 
-}
+	if(isFunc){
+		_readDirectiveProgram(file);
+	}
 
+	_closeForSection();
+}
+void _buildSingleCode(ifstream& file){
+	string line;
+
+	_loadSingleTemplate();
+
+	_readDirectiveProgram(file);
+
+	_closeSingleSection();
+}
 bool _checkIfPrivate(string line){
 	/*
 		Checks to see if line contains
@@ -460,6 +493,7 @@ void _convertDirective(string resultName, ifstream& file) {
 	}
 	else if(resultName == "single") {
 		DEBUG_PRINT("Single!!");
+		_buildSingleCode(file);
 	}
 }
 
@@ -512,7 +546,6 @@ void _checkPrivateClause(string line){
 
 		parseVariableList(list);		
 	}
-
 }
 
 void _checkNumThreads(string line) {
@@ -677,10 +710,10 @@ void _closeTemplates() {
 
 int main (int argc, char *argv[]) {	
 	string programName, line, result;
-	string fileName = "INPUT/parfor.cc"; 	//TODO: SWITCH TO in_stream.open(argv[1]);
+	string fileName = "INPUT/single.cc"; 	//TODO: SWITCH TO in_stream.open(argv[1]);
 	ifstream in_stream;
 
-	in_stream.open("INPUT/parfor.cc");
+	in_stream.open("INPUT/single.cc");
 
 	programName = getProgramName(fileName);
 

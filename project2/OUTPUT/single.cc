@@ -24,7 +24,7 @@ void *do_work(void *arg) {
     signalFlag = true;
     a = 10;
     data->id = data->tid;
-    printf( "Single construct executed by thread %d\n", id );
+    printf( "Single construct executed by thread %d\n", data->id );
 
   }
 
@@ -33,8 +33,8 @@ void *do_work(void *arg) {
   int start = tid * chunk_size; 
   int end = start + chunk_size;
 
-  for(i = start; i < end; i++){
-    data->id = data->tid;
+  for(i = start; i <= end; i++){
+    id = data->tid;
     printf( "Thread %d is setting b[%d]=%d\n", id, i, a );
     b[i] = a;
   }
