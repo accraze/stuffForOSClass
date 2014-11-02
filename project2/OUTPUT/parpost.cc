@@ -13,7 +13,7 @@ typedef struct _thread_data_t {
 
 void *do_work(void *arg) {
   thread_data_t *data = (thread_data_t *)arg;
-		data->id = omp_get_thread_num();
+		data->id = data->tid;
 
 		printf( "The parallel region is executed by thread %d\n", data->id );
 
@@ -46,3 +46,4 @@ int main(int argc, char **argv) {
 
   return EXIT_SUCCESS;
 }
+

@@ -1,3 +1,3 @@
 All:
-	g++ main.cc utility.cc -o a.out
+	g++ main.cc scanner.cc utility.cc -o a.out
 	

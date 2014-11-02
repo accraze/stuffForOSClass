@@ -26,6 +26,7 @@ int privateCount = 0;
 //***********************//
 
 void DEBUG_PRINT (string line);
+void runScanner(string fileName);
 void DEBUG_VECTOR(vector<string>& dict);
 void loadVector(vector<string>& source, vector<string>& target);
 void saveProcessedProgram(string programName);
@@ -212,7 +213,7 @@ void saveProcessedProgram(string programName) {
 		and mainFunc, then writes to file 
 	*/
 
-	string fileName = "OUTPUT/" + programName + "post.cc";
+	string fileName = "OUTPUT/" + programName + "post1.cc";
 
 	ofstream output_file(fileName.c_str());
     
@@ -386,16 +387,20 @@ bool _checkIfPrivate(string line){
 	int i;
 	for( i = 0; i < privateCount; i++){
 
+		// first check!!
 		int check = line.find(privateVariableList[i]);
 
-		printf("%d\n",check );
 		if(check != std::string::npos){
-			DEBUG_PRINT("FOUND A PRIVATE!!!");
-			DEBUG_PRINT(line);
-			DEBUG_PRINT(privateVariableList[i]);
+			//DEBUG_PRINT("FOUND A PRIVATE!!!");
+			//DEBUG_PRINT(line);
+			//DEBUG_PRINT(privateVariableList[i]);
 
 			replace(line, privateVariableList[i] + "", "data->" + privateVariableList[i]);
-			
+			int check2 = line.find("omp_get");
+				if(check2 != std::string::npos){
+					replace(line, "omp_get_thread_num(),", "data->tid,");
+				}
+
 			check = line.find(privateVariableList[i]+",");
 			
 			if(check != std::string::npos){
@@ -523,10 +528,29 @@ void parseVariableList(string list){
 
 	*/
 
-	int i = 0;
+	string variable;
 
+	int check = list.find(",");
+	while(check != -1){
+		variable = list.substr(0, check);
+		string newList = list.substr(check + 1, list.length());
+		DEBUG_PRINT("WHILE LOOP VAR");
+		DEBUG_PRINT(variable);
 
-	string variable = list.substr(0, list.find(")"));
+		DEBUG_PRINT("New List");
+		DEBUG_PRINT(newList);
+		
+		privateVariableList[privateCount] = variable;
+		
+		privateCount++;
+
+		addPrivateVariables(variable);
+
+		check = newList.find(",");
+		list = newList;
+	}
+
+	variable = list.substr(0, list.find(")"));
 
 	privateVariableList[privateCount] = variable;
 	DEBUG_PRINT(variable);
@@ -712,6 +736,11 @@ void _closeTemplates() {
 	closeMainFunc();
 }
 
+void runOMPScanner(string programName){
+	DEBUG_PRINT("RUNNING SCANNER!!!!!");
+	runScanner(programName);
+}
+
 int main (int argc, char *argv[]) {	
 	string programName, line, result;
 	
@@ -735,6 +764,8 @@ int main (int argc, char *argv[]) {
 	printf("Writing processed pthread program to file....\n");
 	
 	saveProcessedProgram(programName);
+
+	runOMPScanner(programName);
 
 	printf("All done!\n");
 	
