@@ -6,29 +6,33 @@ int id, i, a, b[5];
 
 #define NUM_THREADS 4
 
+bool signalFlag = false;
+
 #define SIZE  5
 
 typedef struct _thread_data_t {
   int tid;
-  int i;
-  int id;
+  int i,id;
 } thread_data_t;
 
 void *do_work(void *arg) {
   thread_data_t *data = (thread_data_t *)arg;
-		#pragma omp sdata->ingle
+  if(!signalFlag){
+    signalFlag = true;
 			a = 10;
-			data->id = omp_get_thread_num();
-			prdata->intf( "Single construct executed by thread %d\n", id );
+			id = data->tid;
+			printf( "Single construct executed by thread %d\n", id );
+  }
+
   int tid = data->tid; 
   int chunk_size = (SIZE / NUM_THREADS); 
   int start = tid * chunk_size; 
   int end = start + chunk_size;
 
-  for(int i = start; i < end; i++){
-			data->id = omp_get_thread_num();
-			prdata->intf( "Thread %d is setting b[%d]=%d\n", id, data->i, a );
-			b[data->i] = a;
+  for(i = start; i < end; i++){
+			id = data->tid;
+			printf( "Thread %d is setting b[%d]=%d\n", id, i, a );
+			b[i] = a;
   }
   pthread_exit(NULL);
 }
@@ -53,7 +57,6 @@ int main(int argc, char **argv) {
   }
 
 
-
 	printf( "After the parallel region:\n" );
 	printf( "a = %d\n", a );
 	for( i = 0; i < 5; i++ )
@@ -64,3 +67,4 @@ int main(int argc, char **argv) {
 
   return EXIT_SUCCESS;
 }
+

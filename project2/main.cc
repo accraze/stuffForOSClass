@@ -273,7 +273,7 @@ void _loadParforTemplate (){
 	workFunc.push_back("  int start = tid * chunk_size; ");
 	workFunc.push_back("  int end = start + chunk_size;");
 	workFunc.push_back("");
-	workFunc.push_back("  for(int i = start; i < end; i++)");
+	workFunc.push_back("  for(i = start; i < end; i++)");
 }
 
 void _loadForTemplate (){
@@ -288,7 +288,7 @@ void _loadForTemplate (){
 	workFunc.push_back("  int start = tid * chunk_size; ");
 	workFunc.push_back("  int end = start + chunk_size;");
 	workFunc.push_back("");
-	workFunc.push_back("  for(int i = start; i < end; i++){");
+	workFunc.push_back("  for(i = start; i < end; i++){");
 }
 
 void _loadCriticalTemplate (){
@@ -388,14 +388,15 @@ bool _checkIfPrivate(string line){
 	for( i = 0; i < privateCount; i++){
 
 		// first check!!
-		int check = line.find(privateVariableList[i]);
+		int check = line.find(privateVariableList[i] + " ");
+		int check2 = line.find(privateVariableList[i] + ";");
 
 		if(check != std::string::npos){
 			//DEBUG_PRINT("FOUND A PRIVATE!!!");
 			//DEBUG_PRINT(line);
 			//DEBUG_PRINT(privateVariableList[i]);
 
-			replace(line, privateVariableList[i] + "", "data->" + privateVariableList[i]);
+			replace(line, privateVariableList[i] + " ", "data->" + privateVariableList[i]);
 			int check2 = line.find("omp_get");
 				if(check2 != std::string::npos){
 					replace(line, "omp_get_thread_num(),", "data->tid,");
@@ -530,25 +531,25 @@ void parseVariableList(string list){
 
 	string variable;
 
-	int check = list.find(",");
-	while(check != -1){
-		variable = list.substr(0, check);
-		string newList = list.substr(check + 1, list.length());
-		DEBUG_PRINT("WHILE LOOP VAR");
-		DEBUG_PRINT(variable);
+	// int check = list.find(",");
+	// while(check != -1){
+	// 	variable = list.substr(0, check);
+	// 	string newList = list.substr(check + 1, list.length());
+	// 	DEBUG_PRINT("WHILE LOOP VAR");
+	// 	DEBUG_PRINT(variable);
 
-		DEBUG_PRINT("New List");
-		DEBUG_PRINT(newList);
+	// 	DEBUG_PRINT("New List");
+	// 	DEBUG_PRINT(newList);
 		
-		privateVariableList[privateCount] = variable;
+	// 	privateVariableList[privateCount] = variable;
 		
-		privateCount++;
+	// 	privateCount++;
 
-		addPrivateVariables(variable);
+	// 	addPrivateVariables(variable);
 
-		check = newList.find(",");
-		list = newList;
-	}
+	// 	check = newList.find(",");
+	// 	list = newList;
+	// }
 
 	variable = list.substr(0, list.find(")"));
 

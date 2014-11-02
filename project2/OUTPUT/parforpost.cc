@@ -2,7 +2,7 @@
 #include	<stdlib.h>
 #include 	<pthread.h>
 
-int i, n;
+int i, id;
 
 #define NUM_THREADS 4
 
@@ -10,6 +10,7 @@ int i, n;
 
 typedef struct _thread_data_t {
   int tid;
+  int i,id;
 } thread_data_t;
 
 void *do_work(void *arg) {
@@ -19,9 +20,9 @@ void *do_work(void *arg) {
   int start = tid * chunk_size; 
   int end = start + chunk_size;
 
-  for(int i = start; i < end; i++)
-		printf( "Thread %d executes loop iteration %d\n", data->tid, i );
-
+  for(i = start; i < end; i++)
+			id = data->tid;
+			printf( "Thread %d executes loop iteration %d\n", id, i );
   pthread_exit(NULL);
 }
 
@@ -44,6 +45,9 @@ int main(int argc, char **argv) {
   }
 
 
+	return(0);
+
 
   return EXIT_SUCCESS;
 }
+

@@ -39,7 +39,6 @@ bool checkforOMPLibraryRoutine(string line){
 		printf("FOUND A OMP REF!!");
 		replaceRemove(line, "omp_get_thread_num()", "data->tid");
 		printf("REPLACED!!!");
-		printf(line.c_str());
 		
 		program.push_back(line);
 		//printVECTOR(program);
@@ -56,7 +55,6 @@ void saveNewProgram(string programName){
 		and mainFunc, then writes to file 
 	*/
 
-		printf(programName.c_str());
 	string fileName = "OUTPUT/" + programName + "post.cc";
 
 	ofstream output_file(fileName.c_str());
