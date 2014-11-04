@@ -9,11 +9,6 @@ using namespace std;
 
 vector<string> program;
 
-void printVECTOR(vector<string>& dict) {
-
-	 for( std::vector<string>::const_iterator i = dict.begin(); i != dict.end(); ++i)
-	 	std::cout << *i << ' ' << endl;
-}
 
 bool replaceRemove(std::string& str, const std::string& from, const std::string& to) {
     // this function replaces part of a string with another string
@@ -36,12 +31,9 @@ bool checkforOMPLibraryRoutine(string line){
 
 
 	if(check != std::string::npos){
-		printf("FOUND A OMP REF!!");
 		replaceRemove(line, "omp_get_thread_num()", "data->tid");
-		printf("REPLACED!!!");
 		
 		program.push_back(line);
-		//printVECTOR(program);
 		
 		return true;
 	}
@@ -60,8 +52,6 @@ void saveNewProgram(string programName){
 	ofstream output_file(fileName.c_str());
     
     ostream_iterator<std::string> output_iterator(output_file, "\n");
-
-    printVECTOR(program);
     
     //write the program header to file
     copy(program.begin(), program.end(), output_iterator);
@@ -74,8 +64,6 @@ void deleteOldProgram(string programName){
 
 	if( remove( programName.c_str() ) != 0 )
     	perror( "Error deleting file" );
-    else
-    	puts( "File successfully deleted" );
 }
 
 
@@ -101,6 +89,7 @@ void runScanner(string programName){
 	}
 
 	saveNewProgram(programName);
+
 	deleteOldProgram(fileName);
 
 }

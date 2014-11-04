@@ -13,12 +13,12 @@ typedef struct _thread_data_t {
 
 void *do_work(void *arg) {
   thread_data_t *data = (thread_data_t *)arg;
-		data->id = data->tid;
+		data->id= data->tid;
 
-		printf( "The parallel region is executed by thread %d\n", data->id );
+		printf( "The parallel region is executed by thread %d\n", data->id);
 
-		if( data->id == 2 )
-			printf( "   Thread %d does things differently\n", data->id );
+		if( data->id== 2 )
+			printf( "   Thread %d does things differently\n", data->id);
   pthread_exit(NULL);
 }
 
