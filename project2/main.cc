@@ -8,7 +8,7 @@
 using namespace std;
 
 //************************ //
-// GLobal Vars Section
+//   Global Vars Section   //
 //************************ //
 
 bool FIRST_DIRECTIVE = false;
@@ -780,6 +780,8 @@ void _closeTemplates() {
 }
 
 void runOMPScanner(string programName){
+	// calls scanner.cc
+
 	DEBUG_PRINT("RUNNING SCANNER");
 	runScanner(programName);
 }
