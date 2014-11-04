@@ -7,8 +7,9 @@
 
 using namespace std;
 
-#define NUM_PFUNC 6
-
+//************************ //
+// GLobal Vars Section
+//************************ //
 
 bool FIRST_DIRECTIVE = false;
 
@@ -440,6 +441,11 @@ void _loadForTemplate (){
 }
 
 void _loadCriticalTemplate (){
+	/*
+		loads critical construct templates
+		into the worker function of new code.
+	*/
+
 	header.push_back("pthread_mutex_t var=PTHREAD_MUTEX_INITIALIZER;");
 	header.push_back("");
 
@@ -448,6 +454,10 @@ void _loadCriticalTemplate (){
 }
 
 void _loadSingleTemplate(){
+	/*
+		loads basic omp for construct templates
+		into the worker function of new code.
+	*/
 	header.push_back("bool signalFlag = false;");
 	header.push_back("");
 
@@ -466,11 +476,13 @@ void _buildParForCode(ifstream& file){
 }
 
 void _buildCriticalCode(ifstream& file){
+	// builds Critical section tempalate code
+
 	string line;
 
 	_loadCriticalTemplate();
 
-	std::getline (file,line); // TODO: do this really belong here?
+	std::getline (file,line);
 
 	_readDirectiveProgram(file);
 	
@@ -478,6 +490,7 @@ void _buildCriticalCode(ifstream& file){
 }
 
 void _buildForCode(ifstream& file){
+	// Builds For Construct tempalate code
 	string line;
 	
 	getForLoopSize(file);
@@ -500,8 +513,7 @@ void _buildForCode(ifstream& file){
 }
 
 void _buildSingleCode(ifstream& file){
-	string line;
-
+	// builds Single construct tempalate code
 	_loadSingleTemplate();
 
 	_readDirectiveProgram(file);
