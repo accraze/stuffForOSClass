@@ -1,0 +1,12 @@
++++++++++++++++++++++++++++++++++++++
+Use Makefile to compile the program:
+simply type make and it will compile.
+
+
+Execute Program:
+type ./a.out <input file>
+
+ex: ./a.out INPUT/par.cc
+
+The program will generate pthread program
+in the OUTPUT/ directory. 
