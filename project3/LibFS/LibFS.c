@@ -16,14 +16,14 @@ FS_Boot(char *path)
     }
 
     //now search for path
-    int check = File_Open(path);
-    if(check == -1){
+    if(File_Open(path) == -1){
         //if not found
-    File_Create();
+        if(File_Create() == -1){
+            osErrno = E_GENERAL;
+            return -1;
+        }
     }
-
-    // do all of the other stuff needed...
-
+    
     return 0;
 }
 
