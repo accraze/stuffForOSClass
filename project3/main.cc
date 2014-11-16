@@ -1,67 +1,283 @@
-#include	<stdlib.h>
-#include	<string.h>
 #include	<stdio.h>
+#include	<string.h>
+#include	<sys/stat.h>
+#include	<sys/types.h>
+#include	<unistd.h>
+#include	<errno.h>
+#include	<fcntl.h>
 
-struct example
+#include	"LibFS.h"
+#include	"LibDisk.h"
+
+extern Disk_Error_t diskErrno;
+
+void
+usage( char *image )
 {
-	// A structure that is 52 bytes in size.
-
-	int i; 			// 4 bytes
-	char c[6];	   // 6 bytes
-	short s; 		// 2 bytes
-	int a[10];		// 40 bytes
-};
-
-struct overlay
-{
-	// Another structure 52 bytes in size.
-
-	char c[12];	// 12 bytes
-	int i[10];	// 40 bytes
-};
-	
-
-void print_example_struct( struct example *e )
-{
-	printf( "Printing contents of example struct:\n" );
-	printf( "\ti = %d\n", e->i );
-	printf( "\tc = %s\n", e->c );
-	printf( "\ts = %d\n", e->s );
-	for( int i = 0; i < 10; i++ )
-		printf("\ta[%d] = %d\n", i, e->a[i] );
-	return;
-}
-
-void print_overlay_struct( struct overlay *s )
-{
-	printf( "Printing contents of overlay struct:\n" );
-	printf( "\tc = %s\n", s->c );
-	for( int j = 0; j < 10; j ++ )
-		printf("\ti[%d] = %d\n", j, s->i[j] );
-	return;
-}
-
-int main()
-{
-	printf( "sizeof( struct example ) = %d\n", sizeof( struct example ) );
-	printf( "sizeof( struct overlay ) = %d\n", sizeof( struct overlay ) );
-
-	char *bytes = (char *) malloc( sizeof( struct example ) );	
-
-	((struct example *) bytes)->i = 100;
-	strcpy( ((struct example *) bytes)->c, "hi" );
-	((struct example *) bytes)->s = 200;
-	for( int i = 0; i < 10; i++ )
-		((struct example *) bytes)->a[i] = i + i;
-
-	print_example_struct( (struct example *) bytes );
-
-	strcpy( ((struct overlay *) bytes)->c, "hello" );
-	for( int j = 0; j < 10; j++ )
-		((struct overlay *) bytes)->i[j] = j * 9;
-
-	print_overlay_struct( (struct overlay *) bytes );
-
-	free( (void *) bytes );
+	fprintf( stderr, "usage: %s <disk image file>\\n", image );
 	exit( 1 );
+}
+
+int
+main( int argc, char *argv[] )
+{
+	int rc, file_ptr, fd;
+	ssize_t count;
+	struct stat buf;
+	char file_name[ 16 ], dir_name[256], actual_path[ 256 ], path[ 256 ], buffer[ SECTOR_SIZE ];
+    
+	if( argc != 2 )
+	{
+		usage( argv[ 0 ] );
+	}
+    
+	char *image = argv[ 1 ];
+    
+	rc = stat( image, &buf );
+
+	if( ( rc == -1 ) && ( errno == ENOENT ) )
+	{
+		// The named file does not exist, create the file system.
+        
+		printf( "The image %s does not exist, initialize it...\n", image );
+
+		if( ( rc = FS_Boot( image ) ) == -1 )
+		{
+			printf( "Error initializing file system...\n" );
+			printf( "\tdiskErrno = %d\n", diskErrno );
+			osErrno = E_GENERAL;
+			exit( -1 );
+		}
+	}
+	else
+	{
+		if( ( rc = FS_Boot( image ) ) == -1 )
+		{
+			printf( "Error loading file system from disk image...\n" );
+			printf( "\tdiskErrno = %d\n", diskErrno );
+			osErrno = E_GENERAL;
+			exit( -1 );
+		}
+	}
+    
+	// File system created or restored from the file image; synchronize it before working with the FS.
+    
+	if( ( rc = FS_Sync() ) == -1 )
+	{
+		printf( "Error synch-ing file systems to disk...\n" );
+		printf( "\tdiskErrno = %d\n", diskErrno );
+		osErrno = E_GENERAL;
+		exit( -1 );
+	}
+    
+	// Create some directories
+
+	strcpy( dir_name, "/dir1" );
+
+	if( ( rc = Dir_Create( dir_name ) ) == -1 )
+	{
+		printf( "Error creating directory %s...\n", dir_name );
+		printf( "\tosErrno = %d\n", osErrno );
+		exit( -1 );
+	}
+	
+	strcpy( dir_name, "/dir2" );
+	if( ( rc = Dir_Create( dir_name ) ) == -1 )
+	{
+		printf( "Error creating directory %s...\n", dir_name );
+		printf( "\tosErrno = %d\n", osErrno );
+		exit( -1 );
+	}
+
+	strcpy( path, "/dir1/one.txt" );
+	file_ptr = File_Create( path );
+	File_Open( path );
+
+	strcpy( actual_path, "./all-text/one.txt" );
+
+	if( ( fd = open( actual_path, O_RDONLY) ) != -1 )
+	{
+		while( ( count = read( fd, buffer, SECTOR_SIZE ) ) != 0 )
+		{
+			buffer[ count ] = '\0';
+			printf( "Read %s (%d bytes) from file %s, adding to file %s in our file system...\n", buffer, count, actual_path, path );
+			File_Write( file_ptr, buffer, count );
+		}
+
+		File_Close( file_ptr );
+		close( fd );
+	}
+
+	strcpy( path, "/dir1/two.txt" );
+	file_ptr = File_Create( path );
+	File_Open( path );
+
+	strcpy( actual_path, "./all-text/two.txt" );
+
+	if( ( fd = open( actual_path, O_RDONLY) ) != -1 )
+	{
+		while( ( count = read( fd, buffer, SECTOR_SIZE ) ) != 0 )
+		{
+			buffer[ count ] = '\0';
+			printf( "Read %s (%d bytes) from file %s, adding to file %s in our file system...\n", buffer, count, actual_path, path );
+			File_Write( file_ptr, buffer, count );
+		}
+
+		File_Close( file_ptr );
+		close( fd );
+	}
+
+	strcpy( path, "/dir2/three.txt" );
+	file_ptr = File_Create( path );
+	File_Open( path );
+
+	strcpy( actual_path, "./all-text/three.txt" );
+
+	if( ( fd = open( actual_path, O_RDONLY) ) != -1 )
+	{
+		while( ( count = read( fd, buffer, SECTOR_SIZE ) ) != 0 )
+		{
+			buffer[ count ] = '\0';
+			printf( "Read %s (%d bytes) from file %s, adding to file %s in our file system...\n", buffer, count, actual_path, path );
+			File_Write( file_ptr, buffer, count );
+		}
+
+		File_Close( file_ptr );
+		close( fd );
+	}
+
+	strcpy( path, "/dir1/four.txt" );
+	file_ptr = File_Create( path );
+	File_Open( path );
+
+	strcpy( actual_path, "./all-text/four.txt" );
+
+	if( ( fd = open( actual_path, O_RDONLY) ) != -1 )
+	{
+		while( ( count = read( fd, buffer, SECTOR_SIZE ) ) != 0 )
+		{
+			buffer[ count ] = '\0';
+			printf( "Read %s (%d bytes) from file %s, adding to file %s in our file system...\n", buffer, count, actual_path, path );
+			File_Write( file_ptr, buffer, count );
+		}
+	
+		File_Close( file_ptr );
+		close( fd );
+	}
+
+	strcpy( path, "/dir2/five.txt" );
+	file_ptr = File_Create( path );
+	File_Open( path );
+
+	strcpy( actual_path, "./all-text/five.txt" );
+
+	if( ( fd = open( actual_path, O_RDONLY) ) != -1 )
+	{
+		while( ( count = read( fd, buffer, SECTOR_SIZE ) ) != 0 )
+		{
+			buffer[ count ] = '\0';
+			printf( "Read %s (%d bytes) from file %s, adding to file %s in our file system...\n", buffer, count, actual_path, path );
+			File_Write( file_ptr, buffer, count );
+		}
+
+		File_Close( file_ptr );
+		close( fd );
+	}
+
+	strcpy( path, "/dir1/six.txt" );
+	file_ptr = File_Create( path );
+	File_Open( path );
+
+	strcpy( actual_path, "./all-text/six.txt" );
+
+	if( ( fd = open( actual_path, O_RDONLY) ) != -1 )
+	{
+		while( ( count = read( fd, buffer, SECTOR_SIZE ) ) != 0 )
+		{
+			buffer[ count ] = '\0';
+			printf( "Read %s (%d bytes) from file %s, adding to file %s in our file system...\n", buffer, count, actual_path, path );
+			File_Write( file_ptr, buffer, count );
+		}
+		
+		File_Close( file_ptr );
+		close( fd );
+	}
+
+	strcpy( path, "/dir2/seven.txt" );
+	file_ptr = File_Create( path );
+	File_Open( path );
+
+	strcpy( actual_path, "./all-text/seven.txt" );
+
+	if( ( fd = open( actual_path, O_RDONLY) ) != -1 )
+	{
+		while( ( count = read( fd, buffer, SECTOR_SIZE ) ) != 0 )
+		{
+			buffer[ count ] = '\0';
+			printf( "Read %s (%d bytes) from file %s, adding to file %s in our file system...\n", buffer, count, actual_path, path );
+			File_Write( file_ptr, buffer, count );
+		}
+
+		File_Close( file_ptr );
+		close( fd );
+	}
+
+	strcpy( path, "/dir1/eight.txt" );
+	file_ptr = File_Create( path );
+	File_Open( path );
+
+	strcpy( actual_path, "./all-text/eight.txt" );
+
+	if( ( fd = open( actual_path, O_RDONLY) ) != -1 )
+	{
+		while( ( count = read( fd, buffer, SECTOR_SIZE ) ) != 0 )
+		{
+			buffer[ count ] = '\0';
+			printf( "Read %s (%d bytes) from file %s, adding to file %s in our file system...\n", buffer, count, actual_path, path );
+			File_Write( file_ptr, buffer, count );
+		}
+
+		File_Close( file_ptr );
+		close( fd );
+	}
+
+	strcpy( path, "/dir1/nine.txt" );
+	file_ptr = File_Create( path );
+	File_Open( path );
+
+	strcpy( actual_path, "./all-text/nine.txt" );
+
+	if( ( fd = open( actual_path, O_RDONLY) ) != -1 )
+	{
+		while( ( count = read( fd, buffer, SECTOR_SIZE ) ) != 0 )
+		{
+			buffer[ count ] = '\0';
+			printf( "Read %s (%d bytes) from file %s, adding to file %s in our file system...\n", buffer, count, actual_path, path );
+			File_Write( file_ptr, buffer, count );
+		}
+
+		File_Close( file_ptr );
+		close( fd );
+	}
+
+	strcpy( path, "/dir1/ten.txt" );
+	file_ptr = File_Create( path );
+	File_Open( path );
+
+	strcpy( actual_path, "./all-text/ten.txt" );
+
+	if( ( fd = open( actual_path, O_RDONLY) ) != -1 )
+	{
+		while( ( count = read( fd, buffer, SECTOR_SIZE ) ) != 0 )
+		{
+			buffer[ count ] = '\0';
+			printf( "Read %s (%d bytes) from file %s, adding to file %s in our file system...\n", buffer, count, actual_path, path );
+			File_Write( file_ptr, buffer, count );
+		}
+
+		File_Close( file_ptr );
+		close( fd );
+	}
+
+	return( 0 );
 }
