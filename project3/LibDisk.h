@@ -38,4 +38,3 @@ int Disk_Write(int sector, char* buffer);
 int Disk_Read(int sector, char* buffer);
 
 #endif // __Disk_H__
-}

@@ -1,2 +1,2 @@
 all:
-	g++ -o main main.cc LibFS.cc LibDisk.cc
+	g++ -o main main.cc LibFS.c LibDisk.c

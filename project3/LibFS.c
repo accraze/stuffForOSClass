@@ -1,4 +1,5 @@
 #include "LibDisk.h"
+#include "LibFS.h"
 
 // global errno value here
 int osErrno;
@@ -18,7 +19,7 @@ FS_Boot(char *path)
     //now search for path
     if(File_Open(path) == -1){
         //if not found
-        if(File_Create() == -1){
+        if(File_Create(path) == -1){
             osErrno = E_GENERAL;
             return -1;
         }
@@ -112,4 +113,4 @@ Dir_Unlink(char *path)
 {
     printf("Dir_Unlinkn");
     return 0;
-}}
+}

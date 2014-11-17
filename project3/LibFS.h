@@ -1,3 +1,4 @@
+#ifndef __LibFS_h__
 #define __LibFS_h__
 
 /*
@@ -46,5 +47,4 @@ int Dir_Size(char *path);
 int Dir_Read(char *path, void *buffer, int size);
 int Dir_Unlink(char *path);
 
-#endif /* __LibFS_h__ */
-}
+#endif
