@@ -70,6 +70,7 @@ main( int argc, char *argv[] )
 		exit( -1 );
 	}
     
+    Disk_Save(image);
 	// // Create some directories
 
 	// strcpy( dir_name, "/dir1" );

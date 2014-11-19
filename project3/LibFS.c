@@ -1,6 +1,9 @@
 #include "LibDisk.h"
 #include "LibFS.h"
 
+#define MAGIC_NUMBER 1337
+
+
 // global errno value here
 int osErrno;
 
@@ -17,9 +20,11 @@ FS_Boot(char *path)
     }
 
     //now search for image
-    if(Disk_Load(file) == -1){
-        //if not found
-        if(File_Create(path) == -1){
+    if(Disk_Load(path) == -1){
+        //if not found...then init
+        char buff[ SECTOR_SIZE ];
+        buff[0] = MAGIC_NUMBER;
+        if(Disk_Write(0, buff) == -1){
             osErrno = E_GENERAL;
             return -1;
         }
