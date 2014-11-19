@@ -5,6 +5,7 @@
 #include	<unistd.h>
 #include	<errno.h>
 #include	<fcntl.h>
+#include	<string.h>
 
 #include	"LibFS.h"
 #include	"LibDisk.h"

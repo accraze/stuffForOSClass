@@ -23,13 +23,26 @@ FS_Boot(char *path)
     if(Disk_Load(path) == -1){
         //if not found...then init
         char buff[ SECTOR_SIZE ];
-        buff[0] = MAGIC_NUMBER;
+        buff[0] = (char ) MAGIC_NUMBER;
         if(Disk_Write(0, buff) == -1){
             osErrno = E_GENERAL;
             return -1;
         }
     } else {
-        //check to make sure correct size.
+        //check super block for magic number
+        char buff[ SECTOR_SIZE ];
+        if(Disk_Read(0,buff) == -1){
+            osErrno = E_GENERAL;
+            return -1;
+        }
+
+        if(buff[0]!= (char ) 1223){
+            //corrupted
+            printf("ERROR...Corrupted Image\n");
+            osErrno = E_GENERAL;
+            return -1;
+        }
+
     }
     
     return 0;
