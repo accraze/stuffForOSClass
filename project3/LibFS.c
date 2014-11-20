@@ -2,6 +2,9 @@
 #include "LibFS.h"
 
 #define MAGIC_NUMBER 1337
+#define DIR_SIZE 32
+#define INODE_OFFSET 3
+#define DATA_OFFSET 250; 
 
 
 // global errno value here
@@ -9,9 +12,22 @@ int osErrno;
 
 typedef struct inode {
   int fileSize;
-  bool fileType;
+  int fileType;
   int pointers[30];
 } iNode;
+
+typedef struct dir {
+  char* name;
+  int inodeNumber;
+  int pointers[30];
+} Dir;
+
+int inodeTemplate[SECTOR_SIZE];
+
+int inodeCounter = 0;
+
+int dataBlockTemplate[SECTOR_SIZE];
+int dataBlockCounter = 0;
 
 
 int 
@@ -42,6 +58,26 @@ FS_Boot(char *path)
             return -1;
         }
 
+        //init inode bitmap
+        for(int i = 0; i < 1000; i++){
+            inodeTemplate[i] = 0;
+        }
+
+        if(Disk_Read(1,inodeTemplate) == -1){
+            osErrno = E_GENERAL;
+            return -1;
+        }
+
+        
+
+        //create empty directory
+        if(( rc = Dir_Create( "/" ) ) == -1 ){
+            //corrupted
+            printf("ERROR...Corrupted Image\n");
+            osErrno = E_GENERAL;
+            return -1;
+        }
+
     } else {
         //verify image
         char buff[ SECTOR_SIZE ];
@@ -57,20 +93,6 @@ FS_Boot(char *path)
             osErrno = E_GENERAL;
             return -1;
         }
-
-        //init inode bitmap
-        unsigned char inode_bit_map[125];
-
-
-        //create empty directory
-        if(( rc = Dir_Create( "/" ) ) == -1 ){
-            //corrupted
-            printf("ERROR...Corrupted Image\n");
-            osErrno = E_GENERAL;
-            return -1;
-        }
-
-
 
     }
     
@@ -158,6 +180,19 @@ Dir_Create(char *path)
 {
     printf("Dir_Create %s\n", path);
     
+    inodeTemplate[inodeCounter] = 1;
+    
+    iNode->fileSize = DIR_SIZE;
+    iNode->fileType = 1; 
+    iNode->pointers[dataBlockCounter] =  dataBlockCounter + DATA_OFFSET; 
+
+    if(Disk_Write(1, inodeTemplate) == -1){
+            osErrno = E_CREATE;
+            return -1;
+    }
+
+    dataBlockCounter++;
+    inodeCounter++;
 
 
     return 0;
