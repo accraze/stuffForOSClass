@@ -7,6 +7,13 @@
 // global errno value here
 int osErrno;
 
+typedef struct inode {
+  int fileSize;
+  bool fileType;
+  int pointers[30];
+} iNode;
+
+
 int 
 FS_Boot(char *path)
 {
@@ -23,25 +30,47 @@ FS_Boot(char *path)
     if(Disk_Load(path) == -1){
         //if not found...then init
         char buff[ SECTOR_SIZE ];
-        buff[0] = (char ) MAGIC_NUMBER;
+        buff[0] = (char) MAGIC_NUMBER;
         if(Disk_Write(0, buff) == -1){
             osErrno = E_GENERAL;
             return -1;
         }
+        // create buffer
+        buff[0] = (char) MAGIC_NUMBER;
+        if(Disk_Write(0, buff) == -1){
+            osErrno = E_GENERAL;
+            return -1;
+        }
+
     } else {
-        //check super block for magic number
+        //verify image
         char buff[ SECTOR_SIZE ];
         if(Disk_Read(0,buff) == -1){
             osErrno = E_GENERAL;
             return -1;
         }
 
-        if(buff[0]!= (char ) 1223){
+        //check super block has magic number
+        if(buff[0]!= (char) MAGIC_NUMBER){
             //corrupted
             printf("ERROR...Corrupted Image\n");
             osErrno = E_GENERAL;
             return -1;
         }
+
+        //init inode bitmap
+        unsigned char inode_bit_map[125];
+
+
+        //create empty directory
+        if(( rc = Dir_Create( "/" ) ) == -1 ){
+            //corrupted
+            printf("ERROR...Corrupted Image\n");
+            osErrno = E_GENERAL;
+            return -1;
+        }
+
+
 
     }
     
@@ -128,6 +157,9 @@ int
 Dir_Create(char *path)
 {
     printf("Dir_Create %s\n", path);
+    
+
+
     return 0;
 }
 
