@@ -1,5 +1,8 @@
 #include "LibDisk.h"
 #include "LibFS.h"
+#include <cstring>
+
+using namespace std;
 
 #define MAGIC_NUMBER 1337
 #define DIR_SIZE 32
@@ -25,12 +28,14 @@ typedef struct dir {
 struct dir dirSector[4];
 int dirSectorIndex = 0;
 
-int inodeBitmap[SECTOR_SIZE];
+char inodeBitmap[SECTOR_SIZE];
 int dataBlockTemplate[SECTOR_SIZE];
 
 int inodeCounter = 0;
 int dataBlockCounter = 0;
 int dirCounter = 5;
+
+iNode inodeTemp;
 
 
 int 
@@ -63,7 +68,7 @@ FS_Boot(char *path)
 
         //init inode bitmap
         for(int i = 0; i < 1000; i++){
-            inodeBitmap[i] = 0;
+            inodeBitmap[i] = (char)0;
         }
 
         if(Disk_Read(1,inodeBitmap) == -1){
@@ -72,6 +77,7 @@ FS_Boot(char *path)
         }
 
         //create empty directory
+        int rc;
         if(( rc = Dir_Create( "/" ) ) == -1 ){
             //corrupted
             printf("ERROR...Corrupted Image\n");
@@ -182,12 +188,12 @@ Dir_Create(char *path)
     printf("Dir_Create %s\n", path);
     
     //set bitmap
-    inodeBitmap[inodeCounter] = 1;
+    inodeBitmap[inodeCounter] = (char)1;
     
     //intialize inode
-    iNode->fileSize = DIR_SIZE;
-    iNode->fileType = 1; 
-    iNode->pointers[dataBlockCounter] =  dataBlockCounter + DATA_OFFSET; 
+    inodeTemp.fileSize = DIR_SIZE;
+    inodeTemp.fileType = 1; 
+    inodeTemp.pointers[dataBlockCounter] =  dataBlockCounter + DATA_OFFSET; 
 
     //write inodeBitmap
     if(Disk_Write(1, inodeBitmap) == -1){
@@ -196,26 +202,31 @@ Dir_Create(char *path)
     }
     
     //add inode to sector
-    dirSector[dirSectorIndex] = iNode;
+    char *charpointer;
+    charpointer = (char*) &inodeTemp;
+    memcpy((dirSector + dirSectorIndex), charpointer, sizeof(dir));
+    //dirSector[dirSectorIndex] = &inodeTemp;
     
     //write inode sector
+
     if(Disk_Write(inodeCounter+INODE_OFFSET, dirSector) == -1){
             osErrno = E_CREATE;
             return -1;
     }
 
-    //advance directory index in sector
-    dirSectorIndex++;
 
-    //fill up each sector and then advance index
+
+    //full sector then advance index
     if(dirSectorIndex == 3){
         inodeCounter++; 
 
         //reset directory counter
         dirSectorIndex = 0;
     }
-    
-
+    else {
+        //advance directory index in sector
+        dirSectorIndex++;
+    }
 
     return 0;
 }
