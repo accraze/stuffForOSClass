@@ -3,8 +3,8 @@
 
 #define MAGIC_NUMBER 1337
 #define DIR_SIZE 32
-#define INODE_OFFSET 3
-#define DATA_OFFSET 250; 
+#define INODE_OFFSET 5
+#define DATA_OFFSET 250
 
 
 // global errno value here
@@ -22,12 +22,15 @@ typedef struct dir {
   int pointers[30];
 } Dir;
 
-int inodeTemplate[SECTOR_SIZE];
+struct dir dirSector[4];
+int dirSectorIndex = 0;
+
+int inodeBitmap[SECTOR_SIZE];
+int dataBlockTemplate[SECTOR_SIZE];
 
 int inodeCounter = 0;
-
-int dataBlockTemplate[SECTOR_SIZE];
 int dataBlockCounter = 0;
+int dirCounter = 5;
 
 
 int 
@@ -60,15 +63,13 @@ FS_Boot(char *path)
 
         //init inode bitmap
         for(int i = 0; i < 1000; i++){
-            inodeTemplate[i] = 0;
+            inodeBitmap[i] = 0;
         }
 
-        if(Disk_Read(1,inodeTemplate) == -1){
+        if(Disk_Read(1,inodeBitmap) == -1){
             osErrno = E_GENERAL;
             return -1;
         }
-
-        
 
         //create empty directory
         if(( rc = Dir_Create( "/" ) ) == -1 ){
@@ -180,19 +181,40 @@ Dir_Create(char *path)
 {
     printf("Dir_Create %s\n", path);
     
-    inodeTemplate[inodeCounter] = 1;
+    //set bitmap
+    inodeBitmap[inodeCounter] = 1;
     
+    //intialize inode
     iNode->fileSize = DIR_SIZE;
     iNode->fileType = 1; 
     iNode->pointers[dataBlockCounter] =  dataBlockCounter + DATA_OFFSET; 
 
-    if(Disk_Write(1, inodeTemplate) == -1){
+    //write inodeBitmap
+    if(Disk_Write(1, inodeBitmap) == -1){
+            osErrno = E_CREATE;
+            return -1;
+    }
+    
+    //add inode to sector
+    dirSector[dirSectorIndex] = iNode;
+    
+    //write inode sector
+    if(Disk_Write(inodeCounter+INODE_OFFSET, dirSector) == -1){
             osErrno = E_CREATE;
             return -1;
     }
 
-    dataBlockCounter++;
-    inodeCounter++;
+    //advance directory index in sector
+    dirSectorIndex++;
+
+    //fill up each sector and then advance index
+    if(dirSectorIndex == 3){
+        inodeCounter++; 
+
+        //reset directory counter
+        dirSectorIndex = 0;
+    }
+    
 
 
     return 0;
