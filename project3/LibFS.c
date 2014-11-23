@@ -25,7 +25,7 @@ typedef struct dir {
   int pointers[30];
 } Dir;
 
-struct dir dirSector[4];
+char dirSector[4];
 int dirSectorIndex = 0;
 
 char inodeBitmap[SECTOR_SIZE];
@@ -202,10 +202,14 @@ Dir_Create(char *path)
     }
     
     //add inode to sector
-    char *charpointer;
-    charpointer = (char*) &inodeTemp;
-    memcpy((dirSector + dirSectorIndex), charpointer, sizeof(dir));
-    //dirSector[dirSectorIndex] = &inodeTemp;
+    // char *charpointer;
+    // charpointer = (char*) &inodeTemp;
+    // memcpy((dirSector + dirSectorIndex), charpointer, sizeof(dir));
+    
+    // char *charpointer;
+    // charpointer =  (char*)&inodeTemp;
+    char* const buf = reinterpret_cast<char*>(&inodeTemp);
+    dirSector[dirSectorIndex] = *buf;
     
     //write inode sector
 
