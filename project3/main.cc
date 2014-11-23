@@ -72,24 +72,25 @@ main( int argc, char *argv[] )
 	}
     
     Disk_Save(image);
+
 	// // Create some directories
 
-	// strcpy( dir_name, "/dir1" );
+	strcpy( dir_name, "/dir1" );
 
-	// if( ( rc = Dir_Create( dir_name ) ) == -1 )
-	// {
-	// 	printf( "Error creating directory %s...\n", dir_name );
-	// 	printf( "\tosErrno = %d\n", osErrno );
-	// 	exit( -1 );
-	// }
+	if( ( rc = Dir_Create( dir_name ) ) == -1 )
+	{
+		printf( "Error creating directory %s...\n", dir_name );
+		printf( "\tosErrno = %d\n", osErrno );
+		exit( -1 );
+	}
 	
-	// strcpy( dir_name, "/dir2" );
-	// if( ( rc = Dir_Create( dir_name ) ) == -1 )
-	// {
-	// 	printf( "Error creating directory %s...\n", dir_name );
-	// 	printf( "\tosErrno = %d\n", osErrno );
-	// 	exit( -1 );
-	// }
+	strcpy( dir_name, "/dir2" );
+	if( ( rc = Dir_Create( dir_name ) ) == -1 )
+	{
+		printf( "Error creating directory %s...\n", dir_name );
+		printf( "\tosErrno = %d\n", osErrno );
+		exit( -1 );
+	}
 
 	// strcpy( path, "/dir1/one.txt" );
 	// file_ptr = File_Create( path );

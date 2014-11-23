@@ -59,7 +59,7 @@ FS_Boot(char *path)
             osErrno = E_GENERAL;
             return -1;
         }
-        // create buffer
+        // create buffer and write superblock
         buff[0] = (char) MAGIC_NUMBER;
         if(Disk_Write(0, buff) == -1){
             osErrno = E_GENERAL;
@@ -71,7 +71,8 @@ FS_Boot(char *path)
             inodeBitmap[i] = (char)0;
         }
 
-        if(Disk_Read(1,inodeBitmap) == -1){
+        //write inode bitmap
+        if(Disk_Write(1,inodeBitmap) == -1){
             osErrno = E_GENERAL;
             return -1;
         }
