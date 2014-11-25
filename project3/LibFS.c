@@ -38,6 +38,9 @@ int dirInodeCounter = 0;
 int dataBlockCounter = 0;
 int dirDataCounter = 0;
 
+int fileInodeCounter = 0;
+
+
 iNode inodeTemp;
 Dir dirTemp;
 
@@ -124,7 +127,10 @@ int
 File_Create(char *file)
 {
     printf("FS_Create\n");
-    inodeBitmap[dirInodeCounter] = (char)1;
+    while (inodeBitmap[fileInodeCounter] == "1"){
+        fileInodeCounter++;
+    }
+    inodeBitmap[fileInodeCounter] = (char)1;
     
     //intialize inode
     inodeTemp.fileSize = DIR_SIZE;
