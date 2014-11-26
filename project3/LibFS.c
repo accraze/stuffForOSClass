@@ -13,10 +13,12 @@ using namespace std;
 // global errno value here
 int osErrno;
 
+char* name; 
+
 typedef struct inode {
   int fileSize;
   int fileType;
-  int pointers[30];
+  char* pointers[30];
 } iNode;
 
 typedef struct dir {
@@ -149,7 +151,7 @@ File_Create(char *file)
     //intialize inode for file
     inodeTemp.fileSize = 0; // files initialize to size zero
     inodeTemp.fileType = 0; // file 
-    inodeTemp.pointers[0] =  dataBlockCounter + DATA_OFFSET; 
+    inodeTemp.pointers[0] =  basename(file);
 
     //write inodeBitmap
     if(Disk_Write(1, inodeBitmap) == -1){
@@ -245,7 +247,8 @@ Dir_Create(char *path)
     //intialize inode
     inodeTemp.fileSize = DIR_SIZE;
     inodeTemp.fileType = 1; 
-    inodeTemp.pointers[0] =  dataBlockCounter + DATA_OFFSET; 
+    inodeTemp.pointers[0] = dirname(path); 
+
     
     //add inode to sector
     char* const buf = reinterpret_cast<char*>(&inodeTemp);
