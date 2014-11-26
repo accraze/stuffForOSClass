@@ -126,16 +126,30 @@ FS_Sync()
 int
 File_Create(char *file)
 {
+    /*  File Create() creates a new file of the name pointed to by file. Upon success, return 0. If the file
+        already exists, you should return -1 and set osErrno to E CREATE. Note: the file should not be “open”
+        after the create call. Rather, File Create() simply creates a new file on disk of size 0.
+    */
     printf("FS_Create\n");
+
+    //check to see if already exists
+    if(File_Open(file) != -1){
+            osErrno = E_CREATE;
+            return -1;
+    }
+
+    //get inode bitmap num
     while (inodeBitmap[fileInodeCounter] == "1"){
         fileInodeCounter++;
     }
+
+    //if new.... allocate?
     inodeBitmap[fileInodeCounter] = (char)1;
     
-    //intialize inode
-    inodeTemp.fileSize = DIR_SIZE;
-    inodeTemp.fileType = 1; 
-    inodeTemp.pointers[dataBlockCounter] =  dataBlockCounter + DATA_OFFSET; 
+    //intialize inode for file
+    inodeTemp.fileSize = 0; // files initialize to size zero
+    inodeTemp.fileType = 0; // file 
+    inodeTemp.pointers[0] =  dataBlockCounter + DATA_OFFSET; 
 
     //write inodeBitmap
     if(Disk_Write(1, inodeBitmap) == -1){
@@ -231,7 +245,7 @@ Dir_Create(char *path)
     //intialize inode
     inodeTemp.fileSize = DIR_SIZE;
     inodeTemp.fileType = 1; 
-    inodeTemp.pointers[dataBlockCounter] =  dataBlockCounter + DATA_OFFSET; 
+    inodeTemp.pointers[0] =  dataBlockCounter + DATA_OFFSET; 
     
     //add inode to sector
     char* const buf = reinterpret_cast<char*>(&inodeTemp);
