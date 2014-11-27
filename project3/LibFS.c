@@ -151,7 +151,7 @@ File_Create(char *file)
     //intialize inode for file
     inodeTemp.fileSize = 0; // files initialize to size zero
     inodeTemp.fileType = 0; // file 
-    inodeTemp.pointers[0] =  basename(file);
+    inodeTemp.pointers[0] =  file;
 
     //write inodeBitmap
     if(Disk_Write(1, inodeBitmap) == -1){
@@ -168,6 +168,7 @@ File_Create(char *file)
             osErrno = E_CREATE;
             return -1;
     }
+    
     return 0;
 }
 
