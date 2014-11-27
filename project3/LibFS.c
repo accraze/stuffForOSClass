@@ -26,6 +26,9 @@ typedef struct dir {
   int inodeNumber;
 } Dir;
 
+int openFileTable [100];
+int openFileIndex = 0;
+
 char dirInodeSector[4];
 int dirInodeSectorIndex = 0;
 int pointerIndex = 0;
@@ -183,12 +186,30 @@ File_Open(char *file)
     */
     printf("FS_Open\n");
     
-    int loadInfo = Disk_Load(file);
+    //int loadInfo = Disk_Load(file);
 
-    if(loadInfo == -1){
+
+    //read in root directory
+    Disk_Read(5, dirInodeSector);
+    memcpy(&inodeTemp, dirInodeSector, sizeof(iNode));
+
+    int dataIndex = -1;
+
+    for(int i = 0; i < 30; i++){
+        if(inodeTemp.pointers[i] == dirname(file)){
+            dataIndex = i;
+        }
+    }
+
+    if(dataIndex == -1){
         return -1;
     } else {
         //get the integer file descriptor and return it!
+        openFileTable[openFileIndex] = dataIndex + DATA_OFFSET;
+        openFileIndex++;
+
+        return openFileIndex - 1;
+
     }
 
     return 0;
@@ -323,6 +344,8 @@ int
 Dir_Read(char *path, void *buffer, int size)
 {
     printf("Dir_Read\n");
+
+
     return 0;
 }
 
