@@ -1,6 +1,8 @@
 #include "LibDisk.h"
 #include "LibFS.h"
 #include <cstring>
+#include <libgen.h>
+
 
 using namespace std;
 
@@ -137,6 +139,7 @@ File_Create(char *file)
     */
     printf("FS_Create\n");
 
+    //TODO: do not use FILE_OPEN!! look for name exist already
     //check to see if already exists
     if(File_Open(file) != -1){
             osErrno = E_CREATE;
@@ -144,7 +147,7 @@ File_Create(char *file)
     }
 
     //get inode bitmap num
-    while (inodeBitmap[fileInodeCounter] == "1"){
+    while (inodeBitmap[fileInodeCounter] == '1'){
         fileInodeCounter++;
     }
 
@@ -225,6 +228,12 @@ File_Read(int fd, void *buffer, int size)
 int
 File_Write(int fd, void *buffer, int size)
 {
+        /*
+     You need to call Disk Read and
+     Disk Write for every File Read, File Write, 
+     and other file systems operations that interact with the disk.
+
+    */
     printf("FS_Write\n");
     return 0;
 }
@@ -255,6 +264,12 @@ File_Unlink(char *file)
 int
 Dir_Create(char *path)
 {
+        /*
+     You need to call Disk Read and
+     Disk Write for every File Read, File Write, 
+     and other file systems operations that interact with the disk.
+
+    */
     printf("Dir_Create %s\n", path);
     
     //set inode bitmap
@@ -343,6 +358,7 @@ Dir_Size(char *path)
 int
 Dir_Read(char *path, void *buffer, int size)
 {
+
     printf("Dir_Read\n");
 
 

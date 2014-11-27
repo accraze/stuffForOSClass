@@ -92,9 +92,9 @@ main( int argc, char *argv[] )
 		exit( -1 );
 	}
 
-	// strcpy( path, "/dir1/one.txt" );
-	// file_ptr = File_Create( path );
-	// File_Open( path );
+	strcpy( path, "/dir1/one.txt" );
+	File_Create( path );
+	file_ptr = File_Open( path );
 
 	// strcpy( actual_path, "./all-text/one.txt" );
 
