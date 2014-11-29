@@ -2,6 +2,7 @@
 #include "LibFS.h"
 #include <cstring>
 #include <libgen.h>
+#include <errno.h>
 
 
 using namespace std;
@@ -188,8 +189,6 @@ File_Open(char *file)
         of files open, return -1 and set osErrno to E TOO MANY OPEN FILES.
     */
     printf("FS_Open\n");
-    
-    //int loadInfo = Disk_Load(file);
 
 
     //read in root directory
@@ -204,7 +203,9 @@ File_Open(char *file)
         }
     }
 
+    // no such file
     if(dataIndex == -1){
+        osErrno = E_NO_SUCH_FILE;
         return -1;
     } else {
         //get the integer file descriptor and return it!
@@ -229,12 +230,32 @@ int
 File_Write(int fd, void *buffer, int size)
 {
         /*
-     You need to call Disk Read and
-     Disk Write for every File Read, File Write, 
-     and other file systems operations that interact with the disk.
+        should write size bytes from buffer and write them into the file referenced by fd. All
+writes should begin at the current location of the file pointer and the file pointer should be updated
+after the write to its current location plus size. Note that writes are the only way to extend the size
+of a file. If the file is not open, return -1 and set osErrno to E BAD. Upon success of the write, all of
+the data should be written out to disk and the value of size should be returned. If the write cannot
+complete (due to a lack of space), return -1 and set osErrno to E NO SPACE. Finally, if the file exceeds
+the maximum file size, you should return -1 and set osErrno to E FILE TOO BIG.
 
     */
     printf("FS_Write\n");
+
+    //use fd as index for open file table
+    int datablock = openFileTable[fd];
+
+    //if no value, then bad fd
+    if (datablock == NULL){
+        osErrno = E_BAD_FD;
+        return -1;
+    }
+    //handle incorrect size
+    if (size > SECTOR_SIZE){
+        osErrno = E_FILE_TOO_BIG;
+        return -1;
+    } 
+
+
     return 0;
 }
 
