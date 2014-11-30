@@ -185,7 +185,7 @@ File_Create(char *file)
     //if new.... allocate?
     dataBitmap[fileDataCounter] = (char)1;
 
-    if(Disk_Write(1, fileDataCounter + DATA_OFFSET) == -1){
+    if(Disk_Write(2, dataBitmap) == -1){
             osErrno = E_CREATE;
             return -1;
     }
