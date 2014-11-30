@@ -47,6 +47,7 @@ int dataBlockCounter = 0;
 int dirDataCounter = 0;
 
 int fileInodeCounter = 0;
+int fileDataCounter = 0;
 
 
 iNode inodeTemp;
@@ -172,6 +173,19 @@ File_Create(char *file)
     
     //write inode sector
     if(Disk_Write(dirInodeCounter+INODE_OFFSET, dirInodeSector) == -1){
+            osErrno = E_CREATE;
+            return -1;
+    }
+
+     //get inode bitmap num
+    while (dataBitmap[fileDataCounter] == '1'){
+        fileDataCounter++;
+    }
+
+    //if new.... allocate?
+    dataBitmap[fileDataCounter] = (char)1;
+
+    if(Disk_Write(1, fileDataCounter + DATA_OFFSET) == -1){
             osErrno = E_CREATE;
             return -1;
     }
