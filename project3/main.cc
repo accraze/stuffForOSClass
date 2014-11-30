@@ -111,25 +111,6 @@ main( int argc, char *argv[] )
 		close( fd );
 	}
 
-	strcpy( path, "/dir1/two.txt" );
-	file_ptr = File_Create( path );
-	File_Open( path );
-
-	strcpy( actual_path, "./all-text/two.txt" );
-
-	if( ( fd = open( actual_path, O_RDONLY) ) != -1 )
-	{
-		while( ( count = read( fd, buffer, SECTOR_SIZE ) ) != 0 )
-		{
-			buffer[ count ] = '\0';
-			printf( "Read %s (%d bytes) from file %s, adding to file %s in our file system...\n", buffer, count, actual_path, path );
-			File_Write( file_ptr, buffer, count );
-		}
-
-		File_Close( file_ptr );
-		close( fd );
-	}
-
 	// strcpy( path, "/dir2/three.txt" );
 	// file_ptr = File_Create( path );
 	// File_Open( path );

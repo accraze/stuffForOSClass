@@ -256,8 +256,8 @@ the maximum file size, you should return -1 and set osErrno to E FILE TOO BIG.
         return -1;
     }
 
-    if(Disk_Write(datablock, buffer) == 0){
-        return count;
+    if(Disk_Write(datablock, (char*)buffer) == 0){
+        return size;
     }
 
 
