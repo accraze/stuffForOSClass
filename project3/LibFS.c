@@ -249,11 +249,16 @@ the maximum file size, you should return -1 and set osErrno to E FILE TOO BIG.
         osErrno = E_BAD_FD;
         return -1;
     }
+
     //handle incorrect size
     if (size > SECTOR_SIZE){
         osErrno = E_FILE_TOO_BIG;
         return -1;
-    } 
+    }
+
+    if(Disk_Write(datablock, buffer) == 0){
+        return count;
+    }
 
 
     return 0;
@@ -269,7 +274,23 @@ File_Seek(int fd, int offset)
 int
 File_Close(int fd)
 {
+    /*
+        File Close() closes the file referred to by file descriptor fd. If the file is not currently open, return
+        -1 and set osErrno to E BAD FD. Upon success, return 0.
+    */
     printf("FS_Close\n");
+
+    //use fd as index for open file table
+    int datablock = openFileTable[fd];
+
+    //if no value, then bad fd
+    if (datablock == NULL){
+        osErrno = E_BAD_FD;
+        return -1;
+    }
+
+    openFileTable[fd] = NULL;
+
     return 0;
 }
 
