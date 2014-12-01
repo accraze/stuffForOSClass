@@ -11,6 +11,7 @@ using namespace std;
 #define DIR_SIZE 32
 #define INODE_OFFSET 5
 #define DATA_OFFSET 255
+#define MAX_OPEN_FILES 256
 
 
 // global errno value here
@@ -29,7 +30,7 @@ typedef struct dir {
   int inodeNumber;
 } Dir;
 
-int openFileTable [100];
+int openFileTable [MAX_OPEN_FILES];
 int openFileIndex = 0;
 
 char dirInodeSector[4];
@@ -243,15 +244,14 @@ File_Read(int fd, void *buffer, int size)
 int
 File_Write(int fd, void *buffer, int size)
 {
-        /*
+    /*
         should write size bytes from buffer and write them into the file referenced by fd. All
-writes should begin at the current location of the file pointer and the file pointer should be updated
-after the write to its current location plus size. Note that writes are the only way to extend the size
-of a file. If the file is not open, return -1 and set osErrno to E BAD. Upon success of the write, all of
-the data should be written out to disk and the value of size should be returned. If the write cannot
-complete (due to a lack of space), return -1 and set osErrno to E NO SPACE. Finally, if the file exceeds
-the maximum file size, you should return -1 and set osErrno to E FILE TOO BIG.
-
+        writes should begin at the current location of the file pointer and the file pointer should be updated
+        after the write to its current location plus size. Note that writes are the only way to extend the size
+        of a file. If the file is not open, return -1 and set osErrno to E BAD. Upon success of the write, all of
+        the data should be written out to disk and the value of size should be returned. If the write cannot
+        complete (due to a lack of space), return -1 and set osErrno to E NO SPACE. Finally, if the file exceeds
+        the maximum file size, you should return -1 and set osErrno to E FILE TOO BIG.
     */
     printf("FS_Write\n");
 
