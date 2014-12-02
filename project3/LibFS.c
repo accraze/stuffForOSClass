@@ -70,13 +70,8 @@ FS_Boot(char *path)
     //now search for image
     if(Disk_Load(path) == -1){
         //if not found...then init
-        char buff[ SECTOR_SIZE ];
-        buff[0] = (char) MAGIC_NUMBER;
-        if(Disk_Write(0, buff) == -1){
-            osErrno = E_GENERAL;
-            return -1;
-        }
         // create buffer and write superblock
+        char buff[ SECTOR_SIZE ];
         buff[0] = (char) MAGIC_NUMBER;
         if(Disk_Write(0, buff) == -1){
             osErrno = E_GENERAL;
@@ -320,10 +315,10 @@ File_Unlink(char *file)
 int
 Dir_Create(char *path)
 {
-        /*
-     You need to call Disk Read and
-     Disk Write for every File Read, File Write, 
-     and other file systems operations that interact with the disk.
+    /*
+        You need to call Disk Read and
+        Disk Write for every File Read, File Write, 
+        and other file systems operations that interact with the disk.
 
     */
     printf("Dir_Create %s\n", path);

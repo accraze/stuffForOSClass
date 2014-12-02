@@ -111,157 +111,157 @@ main( int argc, char *argv[] )
 		close( fd );
 	}
 
-	// strcpy( path, "/dir2/three.txt" );
-	// file_ptr = File_Create( path );
-	// File_Open( path );
+	strcpy( path, "/dir2/three.txt" );
+	file_ptr = File_Create( path );
+	File_Open( path );
 
-	// strcpy( actual_path, "./all-text/three.txt" );
+	strcpy( actual_path, "./all-text/three.txt" );
 
-	// if( ( fd = open( actual_path, O_RDONLY) ) != -1 )
-	// {
-	// 	while( ( count = read( fd, buffer, SECTOR_SIZE ) ) != 0 )
-	// 	{
-	// 		buffer[ count ] = '\0';
-	// 		printf( "Read %s (%d bytes) from file %s, adding to file %s in our file system...\n", buffer, count, actual_path, path );
-	// 		File_Write( file_ptr, buffer, count );
-	// 	}
+	if( ( fd = open( actual_path, O_RDONLY) ) != -1 )
+	{
+		while( ( count = read( fd, buffer, SECTOR_SIZE ) ) != 0 )
+		{
+			buffer[ count ] = '\0';
+			printf( "Read %s (%d bytes) from file %s, adding to file %s in our file system...\n", buffer, count, actual_path, path );
+			File_Write( file_ptr, buffer, count );
+		}
 
-	// 	File_Close( file_ptr );
-	// 	close( fd );
-	// }
+		File_Close( file_ptr );
+		close( fd );
+	}
 
-	// strcpy( path, "/dir1/four.txt" );
-	// file_ptr = File_Create( path );
-	// File_Open( path );
+	strcpy( path, "/dir1/four.txt" );
+	file_ptr = File_Create( path );
+	File_Open( path );
 
-	// strcpy( actual_path, "./all-text/four.txt" );
+	strcpy( actual_path, "./all-text/four.txt" );
 
-	// if( ( fd = open( actual_path, O_RDONLY) ) != -1 )
-	// {
-	// 	while( ( count = read( fd, buffer, SECTOR_SIZE ) ) != 0 )
-	// 	{
-	// 		buffer[ count ] = '\0';
-	// 		printf( "Read %s (%d bytes) from file %s, adding to file %s in our file system...\n", buffer, count, actual_path, path );
-	// 		File_Write( file_ptr, buffer, count );
-	// 	}
+	if( ( fd = open( actual_path, O_RDONLY) ) != -1 )
+	{
+		while( ( count = read( fd, buffer, SECTOR_SIZE ) ) != 0 )
+		{
+			buffer[ count ] = '\0';
+			printf( "Read %s (%d bytes) from file %s, adding to file %s in our file system...\n", buffer, count, actual_path, path );
+			File_Write( file_ptr, buffer, count );
+		}
 	
-	// 	File_Close( file_ptr );
-	// 	close( fd );
-	// }
+		File_Close( file_ptr );
+		close( fd );
+	}
 
-	// strcpy( path, "/dir2/five.txt" );
-	// file_ptr = File_Create( path );
-	// File_Open( path );
+	strcpy( path, "/dir2/five.txt" );
+	file_ptr = File_Create( path );
+	File_Open( path );
 
-	// strcpy( actual_path, "./all-text/five.txt" );
+	strcpy( actual_path, "./all-text/five.txt" );
 
-	// if( ( fd = open( actual_path, O_RDONLY) ) != -1 )
-	// {
-	// 	while( ( count = read( fd, buffer, SECTOR_SIZE ) ) != 0 )
-	// 	{
-	// 		buffer[ count ] = '\0';
-	// 		printf( "Read %s (%d bytes) from file %s, adding to file %s in our file system...\n", buffer, count, actual_path, path );
-	// 		File_Write( file_ptr, buffer, count );
-	// 	}
+	if( ( fd = open( actual_path, O_RDONLY) ) != -1 )
+	{
+		while( ( count = read( fd, buffer, SECTOR_SIZE ) ) != 0 )
+		{
+			buffer[ count ] = '\0';
+			printf( "Read %s (%d bytes) from file %s, adding to file %s in our file system...\n", buffer, count, actual_path, path );
+			File_Write( file_ptr, buffer, count );
+		}
 
-	// 	File_Close( file_ptr );
-	// 	close( fd );
-	// }
+		File_Close( file_ptr );
+		close( fd );
+	}
 
-	// strcpy( path, "/dir1/six.txt" );
-	// file_ptr = File_Create( path );
-	// File_Open( path );
+	strcpy( path, "/dir1/six.txt" );
+	file_ptr = File_Create( path );
+	File_Open( path );
 
-	// strcpy( actual_path, "./all-text/six.txt" );
+	strcpy( actual_path, "./all-text/six.txt" );
 
-	// if( ( fd = open( actual_path, O_RDONLY) ) != -1 )
-	// {
-	// 	while( ( count = read( fd, buffer, SECTOR_SIZE ) ) != 0 )
-	// 	{
-	// 		buffer[ count ] = '\0';
-	// 		printf( "Read %s (%d bytes) from file %s, adding to file %s in our file system...\n", buffer, count, actual_path, path );
-	// 		File_Write( file_ptr, buffer, count );
-	// 	}
+	if( ( fd = open( actual_path, O_RDONLY) ) != -1 )
+	{
+		while( ( count = read( fd, buffer, SECTOR_SIZE ) ) != 0 )
+		{
+			buffer[ count ] = '\0';
+			printf( "Read %s (%d bytes) from file %s, adding to file %s in our file system...\n", buffer, count, actual_path, path );
+			File_Write( file_ptr, buffer, count );
+		}
 		
-	// 	File_Close( file_ptr );
-	// 	close( fd );
-	// }
+		File_Close( file_ptr );
+		close( fd );
+	}
 
-	// strcpy( path, "/dir2/seven.txt" );
-	// file_ptr = File_Create( path );
-	// File_Open( path );
+	strcpy( path, "/dir2/seven.txt" );
+	file_ptr = File_Create( path );
+	File_Open( path );
 
-	// strcpy( actual_path, "./all-text/seven.txt" );
+	strcpy( actual_path, "./all-text/seven.txt" );
 
-	// if( ( fd = open( actual_path, O_RDONLY) ) != -1 )
-	// {
-	// 	while( ( count = read( fd, buffer, SECTOR_SIZE ) ) != 0 )
-	// 	{
-	// 		buffer[ count ] = '\0';
-	// 		printf( "Read %s (%d bytes) from file %s, adding to file %s in our file system...\n", buffer, count, actual_path, path );
-	// 		File_Write( file_ptr, buffer, count );
-	// 	}
+	if( ( fd = open( actual_path, O_RDONLY) ) != -1 )
+	{
+		while( ( count = read( fd, buffer, SECTOR_SIZE ) ) != 0 )
+		{
+			buffer[ count ] = '\0';
+			printf( "Read %s (%d bytes) from file %s, adding to file %s in our file system...\n", buffer, count, actual_path, path );
+			File_Write( file_ptr, buffer, count );
+		}
 
-	// 	File_Close( file_ptr );
-	// 	close( fd );
-	// }
+		File_Close( file_ptr );
+		close( fd );
+	}
 
-	// strcpy( path, "/dir1/eight.txt" );
-	// file_ptr = File_Create( path );
-	// File_Open( path );
+	strcpy( path, "/dir1/eight.txt" );
+	file_ptr = File_Create( path );
+	File_Open( path );
 
-	// strcpy( actual_path, "./all-text/eight.txt" );
+	strcpy( actual_path, "./all-text/eight.txt" );
 
-	// if( ( fd = open( actual_path, O_RDONLY) ) != -1 )
-	// {
-	// 	while( ( count = read( fd, buffer, SECTOR_SIZE ) ) != 0 )
-	// 	{
-	// 		buffer[ count ] = '\0';
-	// 		printf( "Read %s (%d bytes) from file %s, adding to file %s in our file system...\n", buffer, count, actual_path, path );
-	// 		File_Write( file_ptr, buffer, count );
-	// 	}
+	if( ( fd = open( actual_path, O_RDONLY) ) != -1 )
+	{
+		while( ( count = read( fd, buffer, SECTOR_SIZE ) ) != 0 )
+		{
+			buffer[ count ] = '\0';
+			printf( "Read %s (%d bytes) from file %s, adding to file %s in our file system...\n", buffer, count, actual_path, path );
+			File_Write( file_ptr, buffer, count );
+		}
 
-	// 	File_Close( file_ptr );
-	// 	close( fd );
-	// }
+		File_Close( file_ptr );
+		close( fd );
+	}
 
-	// strcpy( path, "/dir1/nine.txt" );
-	// file_ptr = File_Create( path );
-	// File_Open( path );
+	strcpy( path, "/dir1/nine.txt" );
+	file_ptr = File_Create( path );
+	File_Open( path );
 
-	// strcpy( actual_path, "./all-text/nine.txt" );
+	strcpy( actual_path, "./all-text/nine.txt" );
 
-	// if( ( fd = open( actual_path, O_RDONLY) ) != -1 )
-	// {
-	// 	while( ( count = read( fd, buffer, SECTOR_SIZE ) ) != 0 )
-	// 	{
-	// 		buffer[ count ] = '\0';
-	// 		printf( "Read %s (%d bytes) from file %s, adding to file %s in our file system...\n", buffer, count, actual_path, path );
-	// 		File_Write( file_ptr, buffer, count );
-	// 	}
+	if( ( fd = open( actual_path, O_RDONLY) ) != -1 )
+	{
+		while( ( count = read( fd, buffer, SECTOR_SIZE ) ) != 0 )
+		{
+			buffer[ count ] = '\0';
+			printf( "Read %s (%d bytes) from file %s, adding to file %s in our file system...\n", buffer, count, actual_path, path );
+			File_Write( file_ptr, buffer, count );
+		}
 
-	// 	File_Close( file_ptr );
-	// 	close( fd );
-	// }
+		File_Close( file_ptr );
+		close( fd );
+	}
 
-	// strcpy( path, "/dir1/ten.txt" );
-	// file_ptr = File_Create( path );
-	// File_Open( path );
+	strcpy( path, "/dir1/ten.txt" );
+	file_ptr = File_Create( path );
+	File_Open( path );
 
-	// strcpy( actual_path, "./all-text/ten.txt" );
+	strcpy( actual_path, "./all-text/ten.txt" );
 
-	// if( ( fd = open( actual_path, O_RDONLY) ) != -1 )
-	// {
-	// 	while( ( count = read( fd, buffer, SECTOR_SIZE ) ) != 0 )
-	// 	{
-	// 		buffer[ count ] = '\0';
-	// 		printf( "Read %s (%d bytes) from file %s, adding to file %s in our file system...\n", buffer, count, actual_path, path );
-	// 		File_Write( file_ptr, buffer, count );
-	// 	}
+	if( ( fd = open( actual_path, O_RDONLY) ) != -1 )
+	{
+		while( ( count = read( fd, buffer, SECTOR_SIZE ) ) != 0 )
+		{
+			buffer[ count ] = '\0';
+			printf( "Read %s (%d bytes) from file %s, adding to file %s in our file system...\n", buffer, count, actual_path, path );
+			File_Write( file_ptr, buffer, count );
+		}
 
-	// 	File_Close( file_ptr );
-	// 	close( fd );
-	// }
+		File_Close( file_ptr );
+		close( fd );
+	}
 
 	return( 0 );
 }
