@@ -12,6 +12,7 @@ using namespace std;
 #define INODE_OFFSET 5
 #define DATA_OFFSET 255
 #define MAX_OPEN_FILES 256
+#define MAX_FILE_SIZE 30
 
 
 // global errno value here
@@ -200,33 +201,39 @@ File_Open(char *file)
     */
     printf("FS_Open\n");
 
-
     //read in root directory
     Disk_Read(5, dirInodeSector);
     memcpy(&inodeTemp, dirInodeSector, sizeof(iNode));
 
     int dataIndex = -1;
 
+    //first check for directory match
     for(int i = 0; i < 30; i++){
         if(inodeTemp.pointers[i] == dirname(file)){
             dataIndex = i;
         }
     }
 
-    // no such file
+    // no such directory
     if(dataIndex == -1){
-        osErrno = E_NO_SUCH_FILE;
-        return -1;
-    } else {
-        //get the integer file descriptor and return it!
-        openFileTable[openFileIndex] = dataIndex + DATA_OFFSET;
-        openFileIndex++;
+        for(int i = 0; i < 30; i++){
+            if(inodeTemp.pointers[i] == basename(file)){
+                dataIndex = i;
+            }
+        }
 
-        return openFileIndex - 1;
+        //no such file
+        if(dataIndex == -1){ 
+            osErrno = E_NO_SUCH_FILE;
+            return -1;
+        }
+    } 
 
-    }
+    //get the integer file descriptor and return it!
+    openFileTable[openFileIndex] = dataIndex + DATA_OFFSET;
+    openFileIndex++;
 
-    return 0;
+    return openFileIndex - 1;
 }
 
 int
