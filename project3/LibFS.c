@@ -203,7 +203,8 @@ File_Open(char *file)
 
     //read in root directory
     Disk_Read(5, dirInodeSector);
-    memcpy(&inodeTemp, dirInodeSector, sizeof(iNode));
+    char temp = dirInodeSector[0];
+    memcpy(&inodeTemp, &temp, sizeof(iNode));
 
     int dataIndex = -1;
 
@@ -214,7 +215,7 @@ File_Open(char *file)
         }
     }
 
-    // no such directory
+    // no such directory...then look for file
     if(dataIndex == -1){
         for(int i = 0; i < 30; i++){
             if(inodeTemp.pointers[i] == basename(file)){
@@ -227,7 +228,10 @@ File_Open(char *file)
             osErrno = E_NO_SUCH_FILE;
             return -1;
         }
-    } 
+    } else {
+        //now get directory
+
+    }
 
     //get the integer file descriptor and return it!
     openFileTable[openFileIndex] = dataIndex + DATA_OFFSET;
