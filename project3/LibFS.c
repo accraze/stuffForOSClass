@@ -51,6 +51,8 @@ int dirDataCounter = 0;
 int fileInodeCounter = 0;
 int fileDataCounter = 0;
 
+char* diskName;
+
 
 iNode inodeTemp;
 Dir dirTemp;
@@ -60,6 +62,8 @@ int
 FS_Boot(char *path)
 {
     printf("FS_Boot %s\n", path);
+
+    diskName = path;
 
     // oops, check for errors
     if (Disk_Init() == -1) {
@@ -123,8 +127,19 @@ FS_Boot(char *path)
 int
 FS_Sync()
 {
+ /*
+    FS Sync() ensures the contents of the file system are stored persistently on disk. More details on how
+    this is accomplished using LibDisk are described in §3.1. Upon success, return 0. Upon failure, return
+    -1 and set osErrno to E GENERAL.
+ */
     printf("FS_Sync\n");
-    //Disk_Save();
+    
+    //save to disk
+    if(Disk_Save(diskName) == -1){
+            osErrno = E_GENERAL;
+            return -1;
+    }
+
     return 0;
 }
 
@@ -203,6 +218,7 @@ File_Open(char *file)
 
     //read in root directory
     Disk_Read(5, dirInodeSector);
+    
     char temp = dirInodeSector[0];
     memcpy(&inodeTemp, &temp, sizeof(iNode));
 
