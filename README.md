@@ -1,5 +1,5 @@
 OS CLASS:
 ---------------------------
 - projects:
-  - 2
-  - 3
+  - open-mp pre-processor
+  - file system library
