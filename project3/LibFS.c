@@ -57,8 +57,6 @@ char* diskName;
 iNode inodeTemp;
 Dir dirTemp;
 
-// int getInodeNumber(int dataBlockNum, char *dirName);
-
 int getInodeNumber(int dataBlockNum, char *dirName){
     char buffer[ SECTOR_SIZE ];
 
@@ -76,6 +74,27 @@ int getInodeNumber(int dataBlockNum, char *dirName){
     }
 
     return -1;
+}
+
+int getFileNumFromDir(char* fileName, int inodeNum){
+    char buffer[ SECTOR_SIZE ];
+
+    if(Disk_Read(inodeNum, buffer)== -1){
+            return -1;
+    }
+
+    for(int i = 0; i < 4; i++){
+        struct inode* tmp = (inode* )buffer[i];
+        
+        if(tmp->fileType == 1){
+            for(int j = 0; j < 30; j++){
+                  if(inodeTemp.pointers[j] == basename(fileName)){
+                    return j+DATA_OFFSET; // return the datablock number
+                }  
+            }
+        }
+    }
+
 }
 
 int 
