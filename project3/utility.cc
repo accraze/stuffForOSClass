@@ -1,5 +1,5 @@
 #include "LibDisk.h"
-//#include "LibFS.h"
+#include "LibFS.h"
 #include "LibFS.c"
 #include <cstring>
 #include <libgen.h>

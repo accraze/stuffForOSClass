@@ -95,6 +95,8 @@ int getFileNumFromDir(char* fileName, int inodeNum){
         }
     }
 
+    return -1;
+
 }
 
 int 
@@ -286,6 +288,16 @@ File_Open(char *file)
     } else {
         //now get directory
         int inodeNum = getInodeNumber(dataIndex, dirname(file));
+
+        int fd = getFileNumFromDir(basename(file), inodeNum);
+
+        //no file found in dir
+        if(fd == -1){
+            osErrno = E_NO_SUCH_FILE;
+            return -1; 
+        }
+
+        dataIndex = fd;
 
     }
 
