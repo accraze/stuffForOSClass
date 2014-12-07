@@ -124,36 +124,36 @@ main( int argc, char *argv[] )
 
 	// Try writing to a file that is not open.
 
-	fd = -1;
-	strcpy( s, "hello" );
-	len = strlen( s );
-	rc = File_Write( fd, s, len );
+	// fd = -1;
+	// strcpy( s, "hello" );
+	// len = strlen( s );
+	// rc = File_Write( fd, s, len );
 
-	if( rc == 0 )
-		printf( "Write of string %s to file with file descriptor %d is successful.\n", "hello", fd ); 
-	else
-		if( osErrno == E_BAD_FD )
-			printf( "The file with file descriptor %d is not open; cannot write.\n", fd ); 
+	// if( rc == 0 )
+	// 	printf( "Write of string %s to file with file descriptor %d is successful.\n", "hello", fd ); 
+	// else
+	// 	if( osErrno == E_BAD_FD )
+	// 		printf( "The file with file descriptor %d is not open; cannot write.\n", fd ); 
 
-	// Try to close a file that is not open.
+	// // Try to close a file that is not open.
 
-	rc = File_Close( fd );
+	// rc = File_Close( fd );
 
-	if( rc == 0 )
-		printf( "Close of file with file descriptor %d is successful.\n", fd ); 
-	else
-		if( osErrno == E_BAD_FD )
-			printf( "Close of file with file descriptor %d is not successful; file not open.\n", fd ); 
+	// if( rc == 0 )
+	// 	printf( "Close of file with file descriptor %d is successful.\n", fd ); 
+	// else
+	// 	if( osErrno == E_BAD_FD )
+	// 		printf( "Close of file with file descriptor %d is not successful; file not open.\n", fd ); 
 
-	// Synchronize file system before exiting.
+	// // Synchronize file system before exiting.
     
-	if( ( rc = FS_Sync() ) == -1 )
-	{
-		printf( "Error synch-ing file systems to disk...\n" );
-		printf( "\tdiskErrno = %d\n", diskErrno );
-		osErrno = E_GENERAL;
-		exit( -1 );
-	}
+	// if( ( rc = FS_Sync() ) == -1 )
+	// {
+	// 	printf( "Error synch-ing file systems to disk...\n" );
+	// 	printf( "\tdiskErrno = %d\n", diskErrno );
+	// 	osErrno = E_GENERAL;
+	// 	exit( -1 );
+	// }
     
 	return( 0 );
 }

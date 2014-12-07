@@ -7,7 +7,7 @@
 using namespace std;
 
 
-void parseName(char* path){
-
+int getInode(char* path){
+	
 }
 
