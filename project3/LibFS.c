@@ -57,6 +57,26 @@ char* diskName;
 iNode inodeTemp;
 Dir dirTemp;
 
+// int getInodeNumber(int dataBlockNum, char *dirName);
+
+int getInodeNumber(int dataBlockNum, char *dirName){
+    char buffer[ SECTOR_SIZE ];
+
+    if(Disk_Read(dataBlockNum, buffer)== -1){
+            return -1;
+    }
+    
+    
+    for(int i = 0; i < 16; i++){
+        struct dir* dirTemp = (dir* )buffer[i];
+        //memcpy(&dirTemp, buf, sizeof(dirTemp));
+        if(dirTemp->name == dirName){
+            return dirTemp->inodeNumber;
+        }
+    }
+
+    return -1;
+}
 
 int 
 FS_Boot(char *path)
@@ -246,6 +266,7 @@ File_Open(char *file)
         }
     } else {
         //now get directory
+        int inodeNum = getInodeNumber(dataIndex, dirname(file));
 
     }
 
@@ -449,3 +470,4 @@ Dir_Unlink(char *path)
     printf("Dir_Unlink\n");
     return 0;
 }
+
