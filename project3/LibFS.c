@@ -18,7 +18,9 @@ using namespace std;
 // global errno value here
 int osErrno;
 
-char* name; 
+char* name;
+
+bool isEmpty = true; 
 
 typedef struct inode {
   int fileSize;
@@ -401,67 +403,75 @@ Dir_Create(char *path)
 
     */
     printf("Dir_Create %s\n", path);
-    
-    //set inode bitmap
-    inodeBitmap[dirInodeCounter] = (char)1;
 
-    //write inodeBitmap
-    if(Disk_Write(1, inodeBitmap) == -1){
-            osErrno = E_CREATE;
-            return -1;
+    //do we have a new disk image?
+    if(isEmpty == true){
+        isEmpty = false;
+        //set inode bitmap
+        inodeBitmap[dirInodeCounter] = (char)1;
+
+        //write inodeBitmap
+        if(Disk_Write(1, inodeBitmap) == -1){
+                osErrno = E_CREATE;
+                return -1;
+        }
+        
+        //intialize inode
+        inodeTemp.fileSize = DIR_SIZE;
+        inodeTemp.fileType = 1; 
+        inodeTemp.pointers[0] = dirname(path); 
+
+        
+        //add inode to sector
+        char* const buf = reinterpret_cast<char*>(&inodeTemp);
+        dirInodeSector[dirDataCounter] = *buf;
+        
+        //write inode sector
+        if(Disk_Write(dirInodeCounter+INODE_OFFSET, dirInodeSector) == -1){
+                osErrno = E_CREATE;
+                return -1;
+        }
+
+        //full dir inode data sector then advance index
+        if(dirInodeSectorIndex == 3){
+            dirInodeCounter++; 
+
+            //reset directory counter
+            dirInodeSectorIndex = 0;
+        }
+        else {
+            //advance directory index in sector
+            dirInodeSectorIndex++;
+        }
+    ///////////////////////////////////////////
+        //set data bitmap
+        dataBitmap[dirDataCounter] = (char)1;
+
+        //write dataBitmap
+        if(Disk_Write(2, dataBitmap) == -1){
+                osErrno = E_CREATE;
+                return -1;
+        }
+
+        //initialize dir 
+        dirTemp.name = path;
+        dirTemp.inodeNumber = dirInodeCounter;
+
+        //add dir to sector
+        char* const dirBuf = reinterpret_cast<char*>(&dirTemp);
+        dirSector[dirSectorIndex] = *dirBuf;
+
+        //write dir sector
+        if(Disk_Write(dirDataCounter+DATA_OFFSET, dirSector) == -1){
+                osErrno = E_CREATE;
+                return -1;
+        }
+
+    } else {
+        // image persists
+        dirname
     }
     
-    //intialize inode
-    inodeTemp.fileSize = DIR_SIZE;
-    inodeTemp.fileType = 1; 
-    inodeTemp.pointers[0] = dirname(path); 
-
-    
-    //add inode to sector
-    char* const buf = reinterpret_cast<char*>(&inodeTemp);
-    dirInodeSector[dirDataCounter] = *buf;
-    
-    //write inode sector
-    if(Disk_Write(dirInodeCounter+INODE_OFFSET, dirInodeSector) == -1){
-            osErrno = E_CREATE;
-            return -1;
-    }
-
-    //full dir inode data sector then advance index
-    if(dirInodeSectorIndex == 3){
-        dirInodeCounter++; 
-
-        //reset directory counter
-        dirInodeSectorIndex = 0;
-    }
-    else {
-        //advance directory index in sector
-        dirInodeSectorIndex++;
-    }
-///////////////////////////////////////////
-    //set data bitmap
-    dataBitmap[dirDataCounter] = (char)1;
-
-    //write dataBitmap
-    if(Disk_Write(2, dataBitmap) == -1){
-            osErrno = E_CREATE;
-            return -1;
-    }
-
-    //initialize dir 
-    dirTemp.name = path;
-    dirTemp.inodeNumber = dirInodeCounter;
-
-    //add dir to sector
-    char* const dirBuf = reinterpret_cast<char*>(&dirTemp);
-    dirSector[dirSectorIndex] = *dirBuf;
-
-    //write dir sector
-    if(Disk_Write(dirDataCounter+DATA_OFFSET, dirSector) == -1){
-            osErrno = E_CREATE;
-            return -1;
-    }
-
     //full dir data sector then advance data bitmap index
     if(dirSectorIndex == 15){
         dirDataCounter++; 
@@ -473,7 +483,6 @@ Dir_Create(char *path)
         //advance directory index in sector
         dirSectorIndex++;
     }
-    
     return 0;
 
 }
