@@ -3,6 +3,7 @@
 #include <cstring>
 #include <libgen.h>
 #include <errno.h>
+#include <iterator>
 
 using namespace std;
 
@@ -59,9 +60,9 @@ int fileDataCounter = 0;
 
 char* diskName;
 
-char* createdFileList[1000];
+char* createdFileList[SECTOR_SIZE];
 int fileCreatePointer = 0;
-char* createdDirList[1000];
+char* createdDirList[SECTOR_SIZE];
 int dirCreatePointer = 0;
 
 iNode inodeTemp;
@@ -81,6 +82,10 @@ int makeInode(char* path, char type);
 int makeDataBlock(char* path, char type);
 int getInodeNumber(int dataBlockNum, char *dirName);
 int getFileNumFromDir(char* fileName, int inodeNum);
+void _persistLoad();
+void _assistFile();
+void _assistDir();
+
 
 
 
@@ -112,6 +117,7 @@ void updateDirCounters(char* path){
         dirSectorIndex++;
     }
     createdDirList[dirCreatePointer] = path;
+    _assistDir();
     dirCreatePointer++;
 }
 
@@ -132,6 +138,7 @@ void updateFileCounters(char*path) {
     }
 
     createdFileList[fileCreatePointer] = path;
+    _assistFile();
     fileCreatePointer++;
 }
 
@@ -480,7 +487,7 @@ FS_Boot(char *path)
             osErrno = E_GENERAL;
             return -1;
         }
-
+        _persistLoad();
     }
 
     isEmpty = false; 
@@ -642,12 +649,6 @@ File_Write(int fd, void *buffer, int size)
         return -1;
     }
 
-    //bool open = isOpen(path);
-    
-    // if(!open){
-    //     //cant write to an unopened file
-    //     return -1;
-    // }
 
     if(Disk_Write(datablock, (char*)buffer) == 0){
         return size;
@@ -778,3 +779,20 @@ Dir_Unlink(char *path)
     return 0;
 }
 
+void _assistFile(){
+    Disk_Write(9999, (char*) createdFileList);
+}
+
+void _assistDir(){
+    Disk_Write(9998, (char*) createdDirList);
+}
+
+void _persistLoad(){
+    char* buff[SECTOR_SIZE];
+    Disk_Read(9999, (char*)buff);
+    //std::copy(std::begin(buff), std::end(buff), std::begin(createdFileList));
+    memcpy ( createdFileList, buff, SECTOR_SIZE);
+    Disk_Read(9998, (char*)buff);
+    //std::copy(std::begin(buff), std::end(buff), std::begin(createdDirList));
+    memcpy ( createdDirList, buff, SECTOR_SIZE);
+}

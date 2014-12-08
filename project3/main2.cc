@@ -137,23 +137,23 @@ main( int argc, char *argv[] )
 
 	// // Try to close a file that is not open.
 
-	// rc = File_Close( fd );
+	rc = File_Close( fd );
 
-	// if( rc == 0 )
-	// 	printf( "Close of file with file descriptor %d is successful.\n", fd ); 
-	// else
-	// 	if( osErrno == E_BAD_FD )
-	// 		printf( "Close of file with file descriptor %d is not successful; file not open.\n", fd ); 
+	if( rc == 0 )
+		printf( "Close of file with file descriptor %d is successful.\n", fd ); 
+	else
+		if( osErrno == E_BAD_FD )
+			printf( "Close of file with file descriptor %d is not successful; file not open.\n", fd ); 
 
 	// // Synchronize file system before exiting.
     
-	// if( ( rc = FS_Sync() ) == -1 )
-	// {
-	// 	printf( "Error synch-ing file systems to disk...\n" );
-	// 	printf( "\tdiskErrno = %d\n", diskErrno );
-	// 	osErrno = E_GENERAL;
-	// 	exit( -1 );
-	// }
+	if( ( rc = FS_Sync() ) == -1 )
+	{
+		printf( "Error synch-ing file systems to disk...\n" );
+		printf( "\tdiskErrno = %d\n", diskErrno );
+		osErrno = E_GENERAL;
+		exit( -1 );
+	}
     
 	return( 0 );
 }
