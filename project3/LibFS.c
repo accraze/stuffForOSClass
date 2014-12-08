@@ -42,6 +42,10 @@ int pointerIndex = 0;
 char dirSector[16];
 int dirSectorIndex = 0;
 
+char fileInodeSector[4];
+int fileInodeSectorIndex = 0;
+int filePointerIndex = 0;
+
 char inodeBitmap[SECTOR_SIZE];
 char dataBitmap[SECTOR_SIZE];
 
@@ -87,6 +91,23 @@ void updateDirCounters(){
     }
 }
 
+void updateFileCounters() {
+/*
+    Updates all counter variables for file mgmt
+*/
+    //full file inode data sector then advance index
+    if(fileInodeSectorIndex == 3){
+        fileInodeCounter++; 
+
+        //reset directory counter
+        fileInodeSectorIndex = 0;
+    }
+    else {
+        //advance directory index in sector
+        fileInodeSectorIndex++;
+    }
+}
+
 int makeInode(char* path, char type){
 /*
     Handles inode creation process.
@@ -118,7 +139,34 @@ int makeInode(char* path, char type){
     }
 
     if(type == 'f'){
-    
+        //get inode bitmap num
+        while (inodeBitmap[fileInodeCounter] == '1'){
+            fileInodeCounter++;
+        }
+
+        //if new.... allocate?
+        inodeBitmap[fileInodeCounter] = (char)1;
+        
+        //intialize inode for file
+        inodeTemp.fileSize = 0; // files initialize to size zero
+        inodeTemp.fileType = 0; // file 
+        inodeTemp.pointers[0] =  path;
+
+        //write inodeBitmap
+        if(Disk_Write(1, inodeBitmap) == -1){
+                osErrno = E_CREATE;
+                return -1;
+        }
+        
+        //add inode to sector
+        char* const buf = reinterpret_cast<char*>(&inodeTemp);
+        fileInodeSector[fileInodeSectorIndex] = *buf;
+        
+        //write inode sector
+        if(Disk_Write(fileInodeCounter+INODE_OFFSET, fileInodeSector) == -1){
+                osErrno = E_CREATE;
+                return -1;
+        }
     }
 
     return 0;
@@ -154,7 +202,20 @@ int makeDataBlock(char* path, char type){
     }
 
     if(type == 'f'){
+        //get inode bitmap num
+        while (dataBitmap[fileDataCounter] == '1'){
+            fileDataCounter++;
+        }
 
+        //if new.... allocate?
+        dataBitmap[fileDataCounter] = (char)1;
+
+        if(Disk_Write(2, dataBitmap) == -1){
+                osErrno = E_CREATE;
+                return -1;
+        }
+
+        
     }
 
     return 0;    
@@ -175,10 +236,12 @@ int addToRootDir(char* path){
 
     //add name to root
     for(int i = 0; i < 30; i++){
+        //check for dupes
         if(inodeTemp.pointers[i] == basename(path)){
             osErrno = E_CREATE;
             return -1;
         }
+
         if(inodeTemp.pointers[i] == NULL){
             inodeTemp.pointers[i] = basename(path);
             dataIndex = i;
@@ -190,6 +253,7 @@ int addToRootDir(char* path){
 }
 
 int getInodeNumber(int dataBlockNum, char *dirName){
+
     char buffer[ SECTOR_SIZE ];
 
     if(Disk_Read(dataBlockNum, buffer)== -1){
@@ -207,6 +271,61 @@ int getInodeNumber(int dataBlockNum, char *dirName){
     }
 
     return -1;
+}
+
+int checkRootDir(char* path) {
+    
+    Disk_Read(5, dirInodeSector);
+
+    char temp = dirInodeSector[0];
+    memcpy(&inodeTemp, &temp, sizeof(iNode));
+
+
+    //check to see if 
+    for(int i = 0; i < 30; i++){
+        if(inodeTemp.pointers[i] == path){
+            return i + DATA_OFFSET;
+        }
+    }
+
+    return -1;
+}
+
+bool checkIfFileExists(char* file) {
+/*
+    check if file exists
+*/
+    char* dir = dirname(file);
+
+    if(dir == "/"){
+        if(checkRootDir(dir) != -1){
+            return true;
+        }
+    } else {
+    
+        int dataNum = checkRootDir(dir);
+        
+        if(dataNum != -1){
+            //now go check new inode
+            int inodeNum = getInodeNumber(dataNum, dir);
+            Disk_Read(inodeNum, dirInodeSector);
+
+            //iterate thru buffer
+            for(int i = 0; i < 4; i++){
+                char temp = dirInodeSector[i];
+                memcpy(&inodeTemp, &temp, sizeof(iNode));
+
+                //check pointers for name match
+                for(int j = 0; j < 30; i++){
+                    if(inodeTemp.pointers[j] == file){
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+
+    return false;
 }
 
 int getFileNumFromDir(char* fileName, int inodeNum){
@@ -329,52 +448,29 @@ File_Create(char *file)
 
     //TODO: do not use FILE_OPEN!! look for name exist already
     //check to see if already exists
-    if(File_Open(file) != -1){
-            osErrno = E_CREATE;
-            return -1;
-    }
+    // if(File_Open(file) != -1){
+    //         osErrno = E_CREATE;
+    //         return -1;
+    // }
 
-    //get inode bitmap num
-    while (inodeBitmap[fileInodeCounter] == '1'){
-        fileInodeCounter++;
-    }
-
-    //if new.... allocate?
-    inodeBitmap[fileInodeCounter] = (char)1;
+    bool exists = checkIfFileExists(file);
     
-    //intialize inode for file
-    inodeTemp.fileSize = 0; // files initialize to size zero
-    inodeTemp.fileType = 0; // file 
-    inodeTemp.pointers[0] =  file;
-
-    //write inodeBitmap
-    if(Disk_Write(1, inodeBitmap) == -1){
-            osErrno = E_CREATE;
-            return -1;
+    if (exists){
+        osErrno = E_CREATE;
+        return -1;
     }
-    
-    //add inode to sector
-    char* const buf = reinterpret_cast<char*>(&inodeTemp);
-    dirInodeSector[dirInodeSectorIndex] = *buf;
-    
-    //write inode sector
-    if(Disk_Write(dirInodeCounter+INODE_OFFSET, dirInodeSector) == -1){
+
+    if(makeDataBlock(file, 'f') == -1){
+                osErrno = E_CREATE;
+                return -1;
+    }
+
+    if(makeInode(file, 'f') == -1){
             osErrno = E_CREATE;
             return -1;
     }
 
-     //get inode bitmap num
-    while (dataBitmap[fileDataCounter] == '1'){
-        fileDataCounter++;
-    }
-
-    //if new.... allocate?
-    dataBitmap[fileDataCounter] = (char)1;
-
-    if(Disk_Write(2, dataBitmap) == -1){
-            osErrno = E_CREATE;
-            return -1;
-    }
+    updateFileCounters();
     
     return 0;
 }
@@ -382,12 +478,12 @@ File_Create(char *file)
 int
 File_Open(char *file)
 {
-    /*
-        File Open() opens a file (whose name is pointed to by file) and returns an integer file descriptor (a
-        number greater than or equal to 0), which can be used to read or write data to that file. If the file
-        doesn’t exist, return -1 and set osErrno to E NO SUCH FILE. If there are already a maximum number
-        of files open, return -1 and set osErrno to E TOO MANY OPEN FILES.
-    */
+/*
+    File Open() opens a file (whose name is pointed to by file) and returns an integer file descriptor (a
+    number greater than or equal to 0), which can be used to read or write data to that file. If the file
+    doesn’t exist, return -1 and set osErrno to E NO SUCH FILE. If there are already a maximum number
+    of files open, return -1 and set osErrno to E TOO MANY OPEN FILES.
+*/
     printf("FS_Open\n");
 
     //read in root directory
