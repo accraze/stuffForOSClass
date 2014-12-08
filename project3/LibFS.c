@@ -4,6 +4,7 @@
 #include <libgen.h>
 #include <errno.h>
 #include <iterator>
+#include <iostream>
 
 using namespace std;
 
@@ -81,6 +82,7 @@ int _checkRootDir(char* path);
 void _updateDirCounters(char* path);
 void _updateFileCounters(char* path);
 bool _checkIfFileExists(char* file);
+bool _checkIfDirExists(char* dir);
 int _makeInode(char* path, char type);
 int _makeDataBlock(char* path, char type);
 int _getInodeNumber(int dataBlockNum, char *dirName);
@@ -88,62 +90,6 @@ int _getFileNumFromDir(char* fileName, int inodeNum);
 void _persistLoad();
 void _assistFile();
 void _assistDir();
-
-
-
-
-void _updateDirCounters(char* path){
-/*
-    Updates all counter variables for directory mgmt
-*/
-    //full dir inode data sector then advance index
-    if(dirInodeSectorIndex == 3){
-        dirInodeCounter++; 
-
-        //reset directory counter
-        dirInodeSectorIndex = 0;
-    }
-    else {
-        //advance directory index in sector
-        dirInodeSectorIndex++;
-    }
-    
-    //full dir data sector then advance data bitmap index
-    if(dirSectorIndex == 15){
-        dirDataCounter++; 
-
-        //reset directory counter
-        dirSectorIndex = 0;
-    }
-    else {
-        //advance directory index in sector
-        dirSectorIndex++;
-    }
-    createdDirList[dirCreatePointer] = path;
-    _assistDir();
-    dirCreatePointer++;
-}
-
-void _updateFileCounters(char*path) {
-/*
-    Updates all counter variables for file mgmt
-*/
-    //full file inode data sector then advance index
-    if(fileInodeSectorIndex == 3){
-        fileInodeCounter++; 
-
-        //reset directory counter
-        fileInodeSectorIndex = 0;
-    }
-    else {
-        //advance directory index in sector
-        fileInodeSectorIndex++;
-    }
-
-    createdFileList[fileCreatePointer] = path;
-    _assistFile();
-    fileCreatePointer++;
-}
 
 int _makeInode(char* path, char type){
 /*
@@ -211,11 +157,11 @@ int _makeInode(char* path, char type){
     return 0;
 }
 
-int _makeDataBlock(char* path, char type){
+int _makeDataBlock(char* path, char type) {
 /*
     Handles data block creation process.
 */
-
+    //printf("data block!\n");
     if(type == 'd'){
         dataBitmap[dirDataCounter] = (char)1;
 
@@ -260,179 +206,17 @@ int _makeDataBlock(char* path, char type){
     return 0;    
 }
 
-int _addToRootDir(char* path){
-/*
-    Adds an element to the root directory
-*/
-    printf("add to root %s\n", path);
-    //read in root directory
-    Disk_Read(5, dirInodeSector);
-
-    char temp = dirInodeSector[0];
-    memcpy(&inodeTemp, &temp, sizeof(iNode));
-
-    //add to root
-    int dataIndex = -1;
-
-    //add name to root
-    for(int i = 0; i < 30; i++){
-        //check for dupes
-        if(inodeTemp.pointers[i] == basename(path)){
-            osErrno = E_CREATE;
-            return -1;
-        }
-
-        if(inodeTemp.pointers[i] == NULL){
-            inodeTemp.pointers[i] = basename(path);
-            dataIndex = i;
-            break;
-        }
-    }
-
-    return 0;
-}
-
-int _getInodeNumber(int dataBlockNum, char *dirName){
-
-    char buffer[ SECTOR_SIZE ];
-
-    if(Disk_Read(dataBlockNum, buffer)== -1){
-            return -1;
-    }
-    
-    
-    for(int i = 0; i < 16; i++){
-        //
-        struct dir* dirTemp = (dir* )buffer[i];
-
-        if(dirTemp->name == dirName){
-            return dirTemp->inodeNumber;
-        }
-    }
-
-    return -1;
-}
-
-int _checkRootDir(char* path) {
-
-    //printf("Check Root Dir\n" );
-    
-    Disk_Read(5, dirInodeSector);
-
-    char temp = dirInodeSector[0];
-    memcpy(&inodeTemp, &temp, sizeof(iNode));
-
-
-    //check to see if 
-    for(int i = 0; i < 30; i++){
-        //printf("%c /n", inodeTemp.pointers[i] );
-        if(inodeTemp.pointers[i] == path){
-            //printf("yeppp\n" );
-            return i + DATA_OFFSET;
-        }
-    }
-
-    return -1;
-}
-
-int check(char* file){
-    int i = 0;
-    
-    while(createdFileList[i] != NULL){
-        if (createdFileList[i] == file){
-            return 0;
-        }
-    }
-
-    return -1;
-}
-
-int check2(char* file){
-    int i = 0;
-    
-    while(createdDirList[i] != NULL){
-        if (createdDirList[i] == file){
-            return 0;
-        }
-    }
-
-    return -1;
-}
-
-bool isOpen(int index){
-    if(openFileTable[index] == NULL){
-        return false;
-    }
-
-    return true;
-}
-
-bool _checkIfFileExists(char* file) {
-/*
-    check if file exists
-*/
-    //printf("Check If Fle Exists\n" );
-    char* dir = dirname(file);
-
-    if(dir == "/"){
-        if(_checkRootDir(dir) != -1){
-            return true;
-        }
-    } else {
-        int dataNum = _checkRootDir(dir);
-        
-        if(dataNum != -1){
-            //now go check new inode
-            int inodeNum = _getInodeNumber(dataNum, dir);
-            Disk_Read(inodeNum, dirInodeSector);
-
-            //iterate thru buffer
-            for(int i = 0; i < 4; i++){
-                char temp = dirInodeSector[i];
-                memcpy(&inodeTemp, &temp, sizeof(iNode));
-
-                //check pointers for name match
-                for(int j = 0; j < 30; i++){
-                    if(inodeTemp.pointers[j] == file){
-                        return true;
-                    }
-                }
-            }
-        }
-
-        if(check(file) != -1){
-            return true;
-        }
-    }
-
-    return false;
-}
-
-int _getFileNumFromDir(char* fileName, int inodeNum){
-    char buffer[ SECTOR_SIZE ];
-
-    if(Disk_Read(inodeNum, buffer)== -1){
-            return -1;
-    }
-
-    for(int i = 0; i < 4; i++){
-        struct inode* tmp = (inode* )buffer[i];
-        
-        if(tmp->fileType == 1){
-            for(int j = 0; j < 30; j++){
-                  if(inodeTemp.pointers[j] == basename(fileName)){
-                    return j+DATA_OFFSET; // return the datablock number
-                }  
-            }
-        }
-    }
-
-    return -1;
-}
-
 int 
 FS_Boot(char *path)
 {
+    /* 
+        must be called exactly once before any other LibFS functions
+        are called. It takes a single argument, the path, which either 
+        points to a real file where your “disk image” is stored, or to a 
+        file that does not yet exist and which must be created to hold a 
+        new disk image. Upon success, return 0. Upon failure, return -1 
+        and set osErrno to E GENERAL.
+    */
     printf("FS_Boot %s\n", path);
 
     diskName = path;
@@ -711,6 +495,12 @@ Dir_Create(char *path)
     */
     printf("Dir_Create %s\n", path);
 
+    // bool exist = _checkIfDirExists(path);
+    // if(exist){
+    //     osErrno = E_CREATE;
+    //     return -1;
+    // }
+
     //do we have a new image?
     if(isEmpty == true){
         printf("!first dir entry\n");
@@ -730,17 +520,9 @@ Dir_Create(char *path)
     } else {
         //printf("has root persist\n");
         // image persists
-        char* rootdir = dirname(path);
+        //char rootdir = dirname(path);
         //printf("!!path root %s\n", rootdir);
         
-        char buffer [SECTOR_SIZE];
-
-        if(rootdir == "/"){   
-            if(_addToRootDir(path) == -1){
-                osErrno = E_CREATE;
-                return -1;
-            }
-        }
 
         if(_makeDataBlock(path, 'd') == -1){
                     osErrno = E_CREATE;
@@ -785,6 +567,7 @@ Dir_Unlink(char *path)
 void _assistFile(){
     //Debug
     Disk_Write(9999, (char*) createdFileList);
+    FS_Sync();
 }
 
 void _assistDir(){
@@ -801,4 +584,285 @@ void _persistLoad(){
     Disk_Read(9998, (char*)buff);
     //std::copy(std::begin(buff), std::end(buff), std::begin(createdDirList));
     memcpy ( createdDirList, buff, SECTOR_SIZE);
+
+
+    //cout <<"HEY" << createdFileList[1];
 }
+
+bool _checkIfDirExists(char* dir) {
+/*
+    check if dir exists
+*/
+    //printf("Check If Fle Exists\n" );
+    // char* dir = dirname(file);
+
+    // if(dir == "/"){
+    //     if(_checkRootDir(dir) != -1){
+    //         return true;
+    //     }
+    // } else {
+    //     int dataNum = _checkRootDir(dir);
+        
+        // if(dataNum != -1){
+        //     //now go check new inode
+        //     int inodeNum = _getInodeNumber(dataNum, dir);
+        //     Disk_Read(inodeNum, dirInodeSector);
+
+            //iterate thru buffer
+            // for(int i = 0; i < 4; i++){
+            //     char temp = dirInodeSector[i];
+            //     memcpy(&inodeTemp, &temp, sizeof(iNode));
+
+            //     //check pointers for name match
+            //     for(int j = 0; j < 30; i++){
+            //         if(inodeTemp.pointers[j] == file){
+            //             return true;
+            //         }
+            //     }
+            // }
+        //}
+
+    int c = _check2(dir);
+    
+    if(c != -1){
+        return true;
+    }
+    //}
+
+    return false;
+}
+
+void _updateDirCounters(char* path){
+/*
+    Updates all counter variables for directory mgmt
+*/
+    //full dir inode data sector then advance index
+    if(dirInodeSectorIndex == 3){
+        dirInodeCounter++; 
+
+        //reset directory counter
+        dirInodeSectorIndex = 0;
+    }
+    else {
+        //advance directory index in sector
+        dirInodeSectorIndex++;
+    }
+    
+    //full dir data sector then advance data bitmap index
+    if(dirSectorIndex == 15){
+        dirDataCounter++; 
+
+        //reset directory counter
+        dirSectorIndex = 0;
+    }
+    else {
+        //advance directory index in sector
+        dirSectorIndex++;
+    }
+    createdDirList[dirCreatePointer] = path;
+    _assistDir();
+    dirCreatePointer++;
+}
+
+void _updateFileCounters(char*path) {
+/*
+    Updates all counter variables for file mgmt
+*/
+    //full file inode data sector then advance index
+    if(fileInodeSectorIndex == 3){
+        fileInodeCounter++; 
+
+        //reset directory counter
+        fileInodeSectorIndex = 0;
+    }
+    else {
+        //advance directory index in sector
+        fileInodeSectorIndex++;
+    }
+
+    createdFileList[fileCreatePointer] = path;
+    _assistFile();
+    fileCreatePointer++;
+}
+
+int _addToRootDir(char* path){
+/*
+    Adds an element to the root directory
+*/
+    printf("add to root %s\n", path);
+    //read in root directory
+    Disk_Read(5, dirInodeSector);
+
+    char temp = dirInodeSector[0];
+    memcpy(&inodeTemp, &temp, sizeof(iNode));
+
+    //add to root
+    int dataIndex = -1;
+
+    //add name to root
+    for(int i = 0; i < 30; i++){
+        //check for dupes
+        if(inodeTemp.pointers[i] == basename(path)){
+            osErrno = E_CREATE;
+            return -1;
+        }
+
+        if(inodeTemp.pointers[i] == NULL){
+            inodeTemp.pointers[i] = basename(path);
+            dataIndex = i;
+            break;
+        }
+    }
+
+    return 0;
+}
+
+int _getInodeNumber(int dataBlockNum, char *dirName){
+
+    char buffer[ SECTOR_SIZE ];
+
+    if(Disk_Read(dataBlockNum, buffer)== -1){
+            return -1;
+    }
+    
+    
+    for(int i = 0; i < 16; i++){
+        //
+        struct dir* dirTemp = (dir* )buffer[i];
+
+        if(dirTemp->name == dirName){
+            return dirTemp->inodeNumber;
+        }
+    }
+
+    return -1;
+}
+
+int _checkRootDir(char* path) {
+
+    //printf("Check Root Dir\n" );
+    
+    Disk_Read(5, dirInodeSector);
+
+    char temp = dirInodeSector[0];
+    memcpy(&inodeTemp, &temp, sizeof(iNode));
+
+
+    //check to see if 
+    for(int i = 0; i < 30; i++){
+        //printf("%c /n", inodeTemp.pointers[i] );
+        if(inodeTemp.pointers[i] == path){
+            //printf("yeppp\n" );
+            return i + DATA_OFFSET;
+        }
+    }
+
+    return -1;
+}
+
+int _check(char* file){
+    //debug function
+    //printf("Checkingggg\n" );
+    int i = 0;
+
+    char* buff[SECTOR_SIZE];
+    Disk_Read(9999, (char*)buff);
+    
+    for(i = 0; i < 10; i++){
+        if (buff[i] == file){
+            return 0;
+        }
+    }
+
+    return -1;
+}
+
+int _check2(char* file){
+    int i = 0;
+    
+    char* buff[SECTOR_SIZE];
+    Disk_Read(9998, (char*)buff);
+    
+    for(i = 0; i < 10; i++){
+        if (buff[i] == file){
+            return 0;
+        }
+    }
+
+    return -1;
+}
+
+bool isOpen(int index){
+    if(openFileTable[index] == NULL){
+        return false;
+    }
+
+    return true;
+}
+
+bool _checkIfFileExists(char* file) {
+/*
+    check if file exists
+*/
+    //printf("Check If Fle Exists\n" );
+    // char* dir = dirname(file);
+
+    // if(dir == "/"){
+    //     if(_checkRootDir(dir) != -1){
+    //         return true;
+    //     }
+    // } else {
+    //     int dataNum = _checkRootDir(dir);
+        
+        // if(dataNum != -1){
+        //     //now go check new inode
+        //     int inodeNum = _getInodeNumber(dataNum, dir);
+        //     Disk_Read(inodeNum, dirInodeSector);
+
+            //iterate thru buffer
+            // for(int i = 0; i < 4; i++){
+            //     char temp = dirInodeSector[i];
+            //     memcpy(&inodeTemp, &temp, sizeof(iNode));
+
+            //     //check pointers for name match
+            //     for(int j = 0; j < 30; i++){
+            //         if(inodeTemp.pointers[j] == file){
+            //             return true;
+            //         }
+            //     }
+            // }
+        //}
+
+    int c = _check(file);
+    
+    if(c != -1){
+        return true;
+    }
+    //}
+
+    return false;
+}
+
+int _getFileNumFromDir(char* fileName, int inodeNum){
+    char buffer[ SECTOR_SIZE ];
+
+    if(Disk_Read(inodeNum, buffer)== -1){
+            return -1;
+    }
+
+    for(int i = 0; i < 4; i++){
+        struct inode* tmp = (inode* )buffer[i];
+        
+        if(tmp->fileType == 1){
+            for(int j = 0; j < 30; j++){
+                  if(inodeTemp.pointers[j] == basename(fileName)){
+                    return j+DATA_OFFSET; // return the datablock number
+                }  
+            }
+        }
+    }
+
+    return -1;
+}
+
+
