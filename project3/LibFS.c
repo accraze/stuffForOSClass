@@ -4,7 +4,6 @@
 #include <libgen.h>
 #include <errno.h>
 
-
 using namespace std;
 
 #define MAGIC_NUMBER 1337
@@ -59,6 +58,35 @@ char* diskName;
 iNode inodeTemp;
 Dir dirTemp;
 
+void updateDirCounters(){
+/*
+    Updates all counter variables for directory mgmt
+*/
+    //full dir inode data sector then advance index
+    if(dirInodeSectorIndex == 3){
+        dirInodeCounter++; 
+
+        //reset directory counter
+        dirInodeSectorIndex = 0;
+    }
+    else {
+        //advance directory index in sector
+        dirInodeSectorIndex++;
+    }
+    
+    //full dir data sector then advance data bitmap index
+    if(dirSectorIndex == 15){
+        dirDataCounter++; 
+
+        //reset directory counter
+        dirSectorIndex = 0;
+    }
+    else {
+        //advance directory index in sector
+        dirSectorIndex++;
+    }
+}
+
 int makeInode(char* path, char type){
 /*
     Handles inode creation process.
@@ -78,11 +106,11 @@ int makeInode(char* path, char type){
         inodeTemp.pointers[0] = path; 
 
         
-        //add inode to sector
+        //add inode to sector buffer
         char* const buf = reinterpret_cast<char*>(&inodeTemp);
         dirInodeSector[dirDataCounter] = *buf;
         
-        //write inode sector
+        //write inode sector to disk
         if(Disk_Write(dirInodeCounter+INODE_OFFSET, dirInodeSector) == -1){
                 osErrno = E_CREATE;
                 return -1;
@@ -481,36 +509,18 @@ Dir_Create(char *path)
     //do we have a new disk image?
     if(isEmpty == true){
         isEmpty = false;
-        //set inode bitmap
-        inodeBitmap[dirInodeCounter] = (char)1;
 
-        //write inodeBitmap
-        if(Disk_Write(1, inodeBitmap) == -1){
-                osErrno = E_CREATE;
-                return -1;
-        }
-        
-        //intialize inode
-        inodeTemp.fileSize = DIR_SIZE;
-        inodeTemp.fileType = 1; 
-        inodeTemp.pointers[0] = path; 
-
-        
-        //add inode to sector
-        char* const buf = reinterpret_cast<char*>(&inodeTemp);
-        dirInodeSector[dirDataCounter] = *buf;
-        
-        //write inode sector
-        if(Disk_Write(dirInodeCounter+INODE_OFFSET, dirInodeSector) == -1){
-                osErrno = E_CREATE;
-                return -1;
-        }
-    
         if(makeDataBlock(path, 'd') == -1){
                 osErrno = E_CREATE;
                 return -1;
         }
 
+        if(makeInode(path, 'd') == -1){
+                osErrno = E_CREATE;
+                return -1;
+        }
+
+        updateDirCounters();
     } else {
         // image persists
         char* rootdir = dirname(path);
@@ -542,57 +552,18 @@ Dir_Create(char *path)
             }
         }
 
-         //set inode bitmap
-            inodeBitmap[dirInodeCounter] = (char)1;
-
-            //write inodeBitmap
-            if(Disk_Write(1, inodeBitmap) == -1){
+        if(makeDataBlock(path, 'd') == -1){
                     osErrno = E_CREATE;
                     return -1;
-            }
-        
-            //intialize inode
-            inodeTemp.fileSize = DIR_SIZE;
-            inodeTemp.fileType = 1; 
-            inodeTemp.pointers[0] = basename(path); 
+        }
 
-        
-        //add inode to sector
-        char* const buf = reinterpret_cast<char*>(&inodeTemp);
-        dirInodeSector[dirDataCounter] = *buf;
-        
-        //write inode sector
-        if(Disk_Write(dirInodeCounter+INODE_OFFSET, dirInodeSector) == -1){
+        if(makeInode(path, 'd' ) == -1){
                 osErrno = E_CREATE;
                 return -1;
         }
-
-    makeDataBlock(path, 'd');
-
-    //full dir inode data sector then advance index
-    if(dirInodeSectorIndex == 3){
-        dirInodeCounter++; 
-
-        //reset directory counter
-        dirInodeSectorIndex = 0;
+        
+        updateDirCounters();
     }
-    else {
-        //advance directory index in sector
-        dirInodeSectorIndex++;
-    }
-    
-    //full dir data sector then advance data bitmap index
-    if(dirSectorIndex == 15){
-        dirDataCounter++; 
-
-        //reset directory counter
-        dirSectorIndex = 0;
-    }
-    else {
-        //advance directory index in sector
-        dirSectorIndex++;
-    }
-}
     return 0;
 
 }
