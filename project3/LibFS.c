@@ -14,6 +14,9 @@ using namespace std;
 #define MAX_OPEN_FILES 256
 #define MAX_FILE_SIZE 30
 
+/////////////////////////////
+//      GLOBALS
+////////////////////////////
 
 // global errno value here
 int osErrno;
@@ -69,19 +72,19 @@ iNode inodeTemp;
 Dir dirTemp;
 
 
-//ForwardDeclaration
-int check(char* file);
-int check2(char* file);
-bool isOpen(char* file);
-int addToRootDir(char* path);
-int checkRootDir(char* path);
-void updateDirCounters(char* path);
-void updateFileCounters(char* path);
-bool checkIfFileExists(char* file);
-int makeInode(char* path, char type);
-int makeDataBlock(char* path, char type);
-int getInodeNumber(int dataBlockNum, char *dirName);
-int getFileNumFromDir(char* fileName, int inodeNum);
+//Private Declarations
+int _check(char* file);
+int _check2(char* file);
+bool _isOpen(char* file);
+int _addToRootDir(char* path);
+int _checkRootDir(char* path);
+void _updateDirCounters(char* path);
+void _updateFileCounters(char* path);
+bool _checkIfFileExists(char* file);
+int _makeInode(char* path, char type);
+int _makeDataBlock(char* path, char type);
+int _getInodeNumber(int dataBlockNum, char *dirName);
+int _getFileNumFromDir(char* fileName, int inodeNum);
 void _persistLoad();
 void _assistFile();
 void _assistDir();
@@ -89,7 +92,7 @@ void _assistDir();
 
 
 
-void updateDirCounters(char* path){
+void _updateDirCounters(char* path){
 /*
     Updates all counter variables for directory mgmt
 */
@@ -121,7 +124,7 @@ void updateDirCounters(char* path){
     dirCreatePointer++;
 }
 
-void updateFileCounters(char*path) {
+void _updateFileCounters(char*path) {
 /*
     Updates all counter variables for file mgmt
 */
@@ -142,7 +145,7 @@ void updateFileCounters(char*path) {
     fileCreatePointer++;
 }
 
-int makeInode(char* path, char type){
+int _makeInode(char* path, char type){
 /*
     Handles inode creation process.
 */
@@ -208,7 +211,7 @@ int makeInode(char* path, char type){
     return 0;
 }
 
-int makeDataBlock(char* path, char type){
+int _makeDataBlock(char* path, char type){
 /*
     Handles data block creation process.
 */
@@ -257,7 +260,7 @@ int makeDataBlock(char* path, char type){
     return 0;    
 }
 
-int addToRootDir(char* path){
+int _addToRootDir(char* path){
 /*
     Adds an element to the root directory
 */
@@ -289,7 +292,7 @@ int addToRootDir(char* path){
     return 0;
 }
 
-int getInodeNumber(int dataBlockNum, char *dirName){
+int _getInodeNumber(int dataBlockNum, char *dirName){
 
     char buffer[ SECTOR_SIZE ];
 
@@ -310,7 +313,7 @@ int getInodeNumber(int dataBlockNum, char *dirName){
     return -1;
 }
 
-int checkRootDir(char* path) {
+int _checkRootDir(char* path) {
 
     //printf("Check Root Dir\n" );
     
@@ -364,7 +367,7 @@ bool isOpen(int index){
     return true;
 }
 
-bool checkIfFileExists(char* file) {
+bool _checkIfFileExists(char* file) {
 /*
     check if file exists
 */
@@ -372,15 +375,15 @@ bool checkIfFileExists(char* file) {
     char* dir = dirname(file);
 
     if(dir == "/"){
-        if(checkRootDir(dir) != -1){
+        if(_checkRootDir(dir) != -1){
             return true;
         }
     } else {
-        int dataNum = checkRootDir(dir);
+        int dataNum = _checkRootDir(dir);
         
         if(dataNum != -1){
             //now go check new inode
-            int inodeNum = getInodeNumber(dataNum, dir);
+            int inodeNum = _getInodeNumber(dataNum, dir);
             Disk_Read(inodeNum, dirInodeSector);
 
             //iterate thru buffer
@@ -405,7 +408,7 @@ bool checkIfFileExists(char* file) {
     return false;
 }
 
-int getFileNumFromDir(char* fileName, int inodeNum){
+int _getFileNumFromDir(char* fileName, int inodeNum){
     char buffer[ SECTOR_SIZE ];
 
     if(Disk_Read(inodeNum, buffer)== -1){
@@ -528,24 +531,24 @@ File_Create(char *file)
     //TODO: do not use FILE_OPEN!! look for name exist already
     //check to see if already exists
 
-    bool exists = checkIfFileExists(file);
+    bool exists = _checkIfFileExists(file);
     
     if (exists){
         osErrno = E_CREATE;
         return -1;
     }
 
-    if(makeDataBlock(file, 'f') == -1){
+    if(_makeDataBlock(file, 'f') == -1){
                 osErrno = E_CREATE;
                 return -1;
     }
 
-    if(makeInode(file, 'f') == -1){
+    if(_makeInode(file, 'f') == -1){
             osErrno = E_CREATE;
             return -1;
     }
 
-    updateFileCounters(file);
+    _updateFileCounters(file);
     
     return 0;
 }
@@ -591,9 +594,9 @@ File_Open(char *file)
         }
     } else {
         //now get directory
-        int inodeNum = getInodeNumber(dataIndex, dirname(file));
+        int inodeNum = _getInodeNumber(dataIndex, dirname(file));
 
-        int fd = getFileNumFromDir(basename(file), inodeNum);
+        int fd = _getFileNumFromDir(basename(file), inodeNum);
 
         //no file found in dir
         if(fd == -1){
@@ -713,17 +716,17 @@ Dir_Create(char *path)
         printf("!first dir entry\n");
         isEmpty = false;
 
-        if(makeDataBlock(path, 'd') == -1){
+        if(_makeDataBlock(path, 'd') == -1){
                 osErrno = E_CREATE;
                 return -1;
         }
 
-        if(makeInode(path, 'd') == -1){
+        if(_makeInode(path, 'd') == -1){
                 osErrno = E_CREATE;
                 return -1;
         }
 
-        updateDirCounters(path);
+        _updateDirCounters(path);
     } else {
         //printf("has root persist\n");
         // image persists
@@ -733,23 +736,23 @@ Dir_Create(char *path)
         char buffer [SECTOR_SIZE];
 
         if(rootdir == "/"){   
-            if(addToRootDir(path) == -1){
+            if(_addToRootDir(path) == -1){
                 osErrno = E_CREATE;
                 return -1;
             }
         }
 
-        if(makeDataBlock(path, 'd') == -1){
+        if(_makeDataBlock(path, 'd') == -1){
                     osErrno = E_CREATE;
                     return -1;
         }
 
-        if(makeInode(path, 'd' ) == -1){
+        if(_makeInode(path, 'd' ) == -1){
                 osErrno = E_CREATE;
                 return -1;
         }
         
-        updateDirCounters(path);
+        _updateDirCounters(path);
     }
     return 0;
 
@@ -780,14 +783,17 @@ Dir_Unlink(char *path)
 }
 
 void _assistFile(){
+    //Debug
     Disk_Write(9999, (char*) createdFileList);
 }
 
 void _assistDir(){
+    //Debug
     Disk_Write(9998, (char*) createdDirList);
 }
 
 void _persistLoad(){
+    //Debug
     char* buff[SECTOR_SIZE];
     Disk_Read(9999, (char*)buff);
     //std::copy(std::begin(buff), std::end(buff), std::begin(createdFileList));
