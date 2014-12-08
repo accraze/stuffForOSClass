@@ -59,6 +59,79 @@ char* diskName;
 iNode inodeTemp;
 Dir dirTemp;
 
+int makeInode(char* path, char type){
+/*
+    Handles inode creation process.
+*/
+    if(type == 'd'){
+       inodeBitmap[dirInodeCounter] = (char)1;
+
+        //write inodeBitmap
+        if(Disk_Write(1, inodeBitmap) == -1){
+                osErrno = E_CREATE;
+                return -1;
+        }
+        
+        //intialize inode
+        inodeTemp.fileSize = DIR_SIZE;
+        inodeTemp.fileType = 1; 
+        inodeTemp.pointers[0] = path; 
+
+        
+        //add inode to sector
+        char* const buf = reinterpret_cast<char*>(&inodeTemp);
+        dirInodeSector[dirDataCounter] = *buf;
+        
+        //write inode sector
+        if(Disk_Write(dirInodeCounter+INODE_OFFSET, dirInodeSector) == -1){
+                osErrno = E_CREATE;
+                return -1;
+        }
+    }
+
+    if(type == 'f'){
+    
+    }
+
+    return 0;
+}
+
+int makeDataBlock(char* path, char type){
+/*
+    Handles data block creation process.
+*/
+
+    if(type == 'd'){
+        dataBitmap[dirDataCounter] = (char)1;
+
+        //write dataBitmap
+        if(Disk_Write(2, dataBitmap) == -1){
+                osErrno = E_CREATE;
+                return -1;
+        }
+
+        //initialize dir 
+        dirTemp.name = path;
+        dirTemp.inodeNumber = dirInodeCounter;
+
+        //add dir to sector
+        char* const dirBuf = reinterpret_cast<char*>(&dirTemp);
+        dirSector[dirSectorIndex] = *dirBuf;
+
+        //write dir sector
+        if(Disk_Write(dirDataCounter+DATA_OFFSET, dirSector) == -1){
+                osErrno = E_CREATE;
+                return -1;
+        }
+    }
+
+    if(type == 'f'){
+
+    }
+
+    return 0;    
+}
+
 int getInodeNumber(int dataBlockNum, char *dirName){
     char buffer[ SECTOR_SIZE ];
 
@@ -68,8 +141,9 @@ int getInodeNumber(int dataBlockNum, char *dirName){
     
     
     for(int i = 0; i < 16; i++){
+        //
         struct dir* dirTemp = (dir* )buffer[i];
-        //memcpy(&dirTemp, buf, sizeof(dirTemp));
+
         if(dirTemp->name == dirName){
             return dirTemp->inodeNumber;
         }
@@ -419,7 +493,68 @@ Dir_Create(char *path)
         //intialize inode
         inodeTemp.fileSize = DIR_SIZE;
         inodeTemp.fileType = 1; 
-        inodeTemp.pointers[0] = dirname(path); 
+        inodeTemp.pointers[0] = path; 
+
+        
+        //add inode to sector
+        char* const buf = reinterpret_cast<char*>(&inodeTemp);
+        dirInodeSector[dirDataCounter] = *buf;
+        
+        //write inode sector
+        if(Disk_Write(dirInodeCounter+INODE_OFFSET, dirInodeSector) == -1){
+                osErrno = E_CREATE;
+                return -1;
+        }
+    
+        if(makeDataBlock(path, 'd') == -1){
+                osErrno = E_CREATE;
+                return -1;
+        }
+
+    } else {
+        // image persists
+        char* rootdir = dirname(path);
+        char buffer [SECTOR_SIZE];
+
+        //read in root directory
+        Disk_Read(5, dirInodeSector);
+    
+        char temp = dirInodeSector[0];
+        memcpy(&inodeTemp, &temp, sizeof(iNode));
+
+        if(rootdir == "/"){
+
+
+            int dataIndex = -1;
+
+            //add name to root
+            for(int i = 0; i < 30; i++){
+                if(inodeTemp.pointers[i] == basename(path)){
+                    // TODO:error!!!! no two same names
+                    osErrno = E_CREATE;
+                    return -1;
+                }
+                if(inodeTemp.pointers[i] == NULL){
+                    inodeTemp.pointers[i] = basename(path);
+                    dataIndex = i;
+                    break;
+                }
+            }
+        }
+
+         //set inode bitmap
+            inodeBitmap[dirInodeCounter] = (char)1;
+
+            //write inodeBitmap
+            if(Disk_Write(1, inodeBitmap) == -1){
+                    osErrno = E_CREATE;
+                    return -1;
+            }
+        
+            //intialize inode
+            inodeTemp.fileSize = DIR_SIZE;
+            inodeTemp.fileType = 1; 
+            inodeTemp.pointers[0] = basename(path); 
 
         
         //add inode to sector
@@ -432,44 +567,18 @@ Dir_Create(char *path)
                 return -1;
         }
 
-        //full dir inode data sector then advance index
-        if(dirInodeSectorIndex == 3){
-            dirInodeCounter++; 
+    makeDataBlock(path, 'd');
 
-            //reset directory counter
-            dirInodeSectorIndex = 0;
-        }
-        else {
-            //advance directory index in sector
-            dirInodeSectorIndex++;
-        }
-    ///////////////////////////////////////////
-        //set data bitmap
-        dataBitmap[dirDataCounter] = (char)1;
+    //full dir inode data sector then advance index
+    if(dirInodeSectorIndex == 3){
+        dirInodeCounter++; 
 
-        //write dataBitmap
-        if(Disk_Write(2, dataBitmap) == -1){
-                osErrno = E_CREATE;
-                return -1;
-        }
-
-        //initialize dir 
-        dirTemp.name = path;
-        dirTemp.inodeNumber = dirInodeCounter;
-
-        //add dir to sector
-        char* const dirBuf = reinterpret_cast<char*>(&dirTemp);
-        dirSector[dirSectorIndex] = *dirBuf;
-
-        //write dir sector
-        if(Disk_Write(dirDataCounter+DATA_OFFSET, dirSector) == -1){
-                osErrno = E_CREATE;
-                return -1;
-        }
-
-    } else {
-        // image persists
-        dirname
+        //reset directory counter
+        dirInodeSectorIndex = 0;
+    }
+    else {
+        //advance directory index in sector
+        dirInodeSectorIndex++;
     }
     
     //full dir data sector then advance data bitmap index
@@ -483,6 +592,7 @@ Dir_Create(char *path)
         //advance directory index in sector
         dirSectorIndex++;
     }
+}
     return 0;
 
 }
