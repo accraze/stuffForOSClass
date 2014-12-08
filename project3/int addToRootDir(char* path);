@@ -1,0 +1,8 @@
+bool isOpen(char *file){
+	while(openList[i] != NULL){
+        if (openList[i] == file){
+            return true;
+        }
+    }
+	return false;
+}

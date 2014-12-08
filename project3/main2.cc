@@ -124,16 +124,16 @@ main( int argc, char *argv[] )
 
 	// Try writing to a file that is not open.
 
-	// fd = -1;
-	// strcpy( s, "hello" );
-	// len = strlen( s );
-	// rc = File_Write( fd, s, len );
+	fd = -1;
+	strcpy( s, "hello" );
+	len = strlen( s );
+	rc = File_Write( fd, s, len );
 
-	// if( rc == 0 )
-	// 	printf( "Write of string %s to file with file descriptor %d is successful.\n", "hello", fd ); 
-	// else
-	// 	if( osErrno == E_BAD_FD )
-	// 		printf( "The file with file descriptor %d is not open; cannot write.\n", fd ); 
+	if( rc == 0 )
+		printf( "Write of string %s to file with file descriptor %d is successful.\n", "hello", fd ); 
+	else
+		if( osErrno == E_BAD_FD )
+			printf( "The file with file descriptor %d is not open; cannot write.\n", fd ); 
 
 	// // Try to close a file that is not open.
 

@@ -33,6 +33,7 @@ typedef struct dir {
 } Dir;
 
 int openFileTable [MAX_OPEN_FILES];
+char* openList [MAX_OPEN_FILES];
 int openFileIndex = 0;
 
 char dirInodeSector[4];
@@ -68,6 +69,9 @@ Dir dirTemp;
 
 
 //ForwardDeclaration
+int check(char* file);
+int check2(char* file);
+bool isOpen(char* file);
 int addToRootDir(char* path);
 int checkRootDir(char* path);
 void updateDirCounters(char* path);
@@ -345,6 +349,14 @@ int check2(char* file){
     return -1;
 }
 
+bool isOpen(int index){
+    if(openFileTable[index] == NULL){
+        return false;
+    }
+
+    return true;
+}
+
 bool checkIfFileExists(char* file) {
 /*
     check if file exists
@@ -588,6 +600,7 @@ File_Open(char *file)
 
     //get the integer file descriptor and return it!
     openFileTable[openFileIndex] = dataIndex + DATA_OFFSET;
+    openList[openFileIndex] = file;
     openFileIndex++;
 
     return openFileIndex - 1;
@@ -629,7 +642,12 @@ File_Write(int fd, void *buffer, int size)
         return -1;
     }
 
-
+    //bool open = isOpen(path);
+    
+    // if(!open){
+    //     //cant write to an unopened file
+    //     return -1;
+    // }
 
     if(Disk_Write(datablock, (char*)buffer) == 0){
         return size;
