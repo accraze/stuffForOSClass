@@ -160,6 +160,35 @@ int makeDataBlock(char* path, char type){
     return 0;    
 }
 
+int addToRootDir(char* path){
+/*
+    Adds an element to the root directory
+*/
+    //read in root directory
+    Disk_Read(5, dirInodeSector);
+
+    char temp = dirInodeSector[0];
+    memcpy(&inodeTemp, &temp, sizeof(iNode));
+
+    //add to root
+    int dataIndex = -1;
+
+    //add name to root
+    for(int i = 0; i < 30; i++){
+        if(inodeTemp.pointers[i] == basename(path)){
+            osErrno = E_CREATE;
+            return -1;
+        }
+        if(inodeTemp.pointers[i] == NULL){
+            inodeTemp.pointers[i] = basename(path);
+            dataIndex = i;
+            break;
+        }
+    }
+
+    return 0;
+}
+
 int getInodeNumber(int dataBlockNum, char *dirName){
     char buffer[ SECTOR_SIZE ];
 
@@ -524,31 +553,14 @@ Dir_Create(char *path)
     } else {
         // image persists
         char* rootdir = dirname(path);
+        
         char buffer [SECTOR_SIZE];
 
-        //read in root directory
-        Disk_Read(5, dirInodeSector);
-    
-        char temp = dirInodeSector[0];
-        memcpy(&inodeTemp, &temp, sizeof(iNode));
-
         if(rootdir == "/"){
-
-
-            int dataIndex = -1;
-
-            //add name to root
-            for(int i = 0; i < 30; i++){
-                if(inodeTemp.pointers[i] == basename(path)){
-                    // TODO:error!!!! no two same names
-                    osErrno = E_CREATE;
-                    return -1;
-                }
-                if(inodeTemp.pointers[i] == NULL){
-                    inodeTemp.pointers[i] = basename(path);
-                    dataIndex = i;
-                    break;
-                }
+            
+            if(addToRootDir(path) == -1){
+                osErrno = E_CREATE;
+                return -1;
             }
         }
 
