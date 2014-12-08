@@ -68,10 +68,10 @@ Dir dirTemp;
 
 
 //ForwardDeclaration
-void updateDirCounters();
-void updateFileCounters();
 int addToRootDir(char* path);
 int checkRootDir(char* path);
+void updateDirCounters(char* path);
+void updateFileCounters(char* path);
 bool checkIfFileExists(char* file);
 int makeInode(char* path, char type);
 int makeDataBlock(char* path, char type);
@@ -80,7 +80,7 @@ int getFileNumFromDir(char* fileName, int inodeNum);
 
 
 
-void updateDirCounters(){
+void updateDirCounters(char* path){
 /*
     Updates all counter variables for directory mgmt
 */
@@ -107,6 +107,8 @@ void updateDirCounters(){
         //advance directory index in sector
         dirSectorIndex++;
     }
+    createdDirList[dirCreatePointer] = path;
+    dirCreatePointer++;
 }
 
 void updateFileCounters(char*path) {
@@ -134,8 +136,8 @@ int makeInode(char* path, char type){
     Handles inode creation process.
 */
     if(type == 'd'){
-        printf("inode for dir %s\n", path);
-       inodeBitmap[dirInodeCounter] = (char)1;
+        //printf("inode for dir %s\n", path);
+        inodeBitmap[dirInodeCounter] = (char)1;
 
         //write inodeBitmap
         if(Disk_Write(1, inodeBitmap) == -1){
@@ -161,7 +163,7 @@ int makeInode(char* path, char type){
     }
 
     if(type == 'f'){
-        printf("inode for file\n");
+        //printf("inode for file\n");
         //get inode bitmap num
         while (inodeBitmap[fileInodeCounter] == '1'){
             fileInodeCounter++;
@@ -299,7 +301,7 @@ int getInodeNumber(int dataBlockNum, char *dirName){
 
 int checkRootDir(char* path) {
 
-    printf("Check Root Dir\n" );
+    //printf("Check Root Dir\n" );
     
     Disk_Read(5, dirInodeSector);
 
@@ -309,9 +311,9 @@ int checkRootDir(char* path) {
 
     //check to see if 
     for(int i = 0; i < 30; i++){
-        printf("%c /n", inodeTemp.pointers[i] );
+        //printf("%c /n", inodeTemp.pointers[i] );
         if(inodeTemp.pointers[i] == path){
-            printf("yeppp\n" );
+            //printf("yeppp\n" );
             return i + DATA_OFFSET;
         }
     }
@@ -331,11 +333,23 @@ int check(char* file){
     return -1;
 }
 
+int check2(char* file){
+    int i = 0;
+    
+    while(createdDirList[i] != NULL){
+        if (createdDirList[i] == file){
+            return 0;
+        }
+    }
+
+    return -1;
+}
+
 bool checkIfFileExists(char* file) {
 /*
     check if file exists
 */
-    printf("Check If Fle Exists\n" );
+    //printf("Check If Fle Exists\n" );
     char* dir = dirname(file);
 
     if(dir == "/"){
@@ -690,12 +704,12 @@ Dir_Create(char *path)
                 return -1;
         }
 
-        updateDirCounters();
+        updateDirCounters(path);
     } else {
-        printf("has root persist\n");
+        //printf("has root persist\n");
         // image persists
         char* rootdir = dirname(path);
-        printf("!!path root %s\n", rootdir);
+        //printf("!!path root %s\n", rootdir);
         
         char buffer [SECTOR_SIZE];
 
@@ -716,7 +730,7 @@ Dir_Create(char *path)
                 return -1;
         }
         
-        updateDirCounters();
+        updateDirCounters(path);
     }
     return 0;
 
